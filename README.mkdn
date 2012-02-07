@@ -188,7 +188,9 @@ controller, to a specific shard, use this syntax:
     end
 ```
 
-## Important!  Sometimes, when a connection isn't used for much time,
+## Exception with Idle Connections
+
+Sometimes, when a connection isn't used for much time,
 this will makes ActiveRecord raising an exception. if you have this
 kind of applications, please, add the following line to your
 configuration:
