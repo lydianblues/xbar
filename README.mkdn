@@ -1,4 +1,4 @@
-# XBar  - Easy Database Sharding for ActiveRecord
+# XBar  - MongoDB Style Sharding for ActiveRecord
 
 ## General Design
 
@@ -47,8 +47,7 @@ is only practical if the writes are performed in parallel in separate
 threads.  The current `Proxy` would become a group manager and we'd
 have a hierarchy something like this:
 
-    Proxy (set of Groups) -> Group (set of Shards) -> Shard (set of
-    replicas)
+    Proxy (set of Groups) -> Group (set of Shards) -> Shard (set of replicas)
 	
 This complexity is too great for the first version of `XBar`.
 
@@ -126,6 +125,7 @@ method is used to select the shard like this:
 XBar also supports queries within a block. When you pass a block to
 the using method, all queries inside the block will be sent to the
 specified shard.
+
 ```ruby
     XBar.using(:slave_two) do
       User.create(:name => "Mike")
@@ -134,6 +134,7 @@ specified shard.
 
 Each model instance knows which shard it came from so this will work
 automatically:
+
 ```ruby
     # This will find the user in the shard1
     @user = User.using(:shard1).find_by_name("Joao")
@@ -153,6 +154,7 @@ automatically:
 In migrations, you also have access to the using method. The syntax is
 basically the same. This migration will run in the brazil and canada
 shards.
+
 ```ruby
     class CreateUsersOnBothShards < ActiveRecord::Migration
       using(:brazil, :canada)
@@ -185,6 +187,7 @@ controller, to a specific shard, use this syntax:
 this will makes ActiveRecord raising an exception. if you have this
 kind of applications, please, add the following line to your
 configuration:
+
 ```ruby
     verify_connection: true
 ```
@@ -192,7 +195,9 @@ configuration:
 This will tell XBar to verify the connection before sending the query.
 
 ## Mixing XBar with the Rails multiple database model
-If you want to set a custom connection to a specific model, use this syntax:
+If you want to set a custom connection to a specific model, use this
+syntax:
+
 ```ruby
     #This class sets its own connection
     # establish_connection will not work, use xbar_establish_connection instead.
