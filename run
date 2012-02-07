@@ -1,0 +1,27 @@
+#!/bin/bash
+#RUBY=/usr/local/rvm/rubies/ruby-1.9.3-p0/bin/ruby
+RDEBUG=/usr/local/rvm/gems/ruby-1.9.3-p0@edge/bin/rdebug
+RSPEC=/usr/local/rvm/gems/ruby-1.9.3-p0@edge/bin/rspec
+SPEC_DIR="spec/xbar"
+
+export BUNDLE_GEMFILE=/Volumes/Opt/projects/xbar/gemfiles/rails32.gemfile
+
+SPEC=$1
+LINE=$2
+
+if [ -n "$SPEC"  ]
+then
+  TEST="$SPEC_DIR/${SPEC}_spec.rb"
+else
+  echo "run.sh spec [line]"
+  exit 1
+fi
+
+if [ -n "$LINE" ]
+then
+  TEST="${TEST}:${LINE}"
+fi
+
+echo $TEST
+
+bundle exec ${RUBY} ${RSPEC} -fd -c ${TEST}

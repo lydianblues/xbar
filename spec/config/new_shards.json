@@ -1,0 +1,29 @@
+{
+  "connections": {
+     "p1": "postgres://user:password@alpha.server.com:5432/mydatabase?encoding=unicode&pool=5",
+     "p2": "postgres://user:password@beta.server.com:5432/mydatabase?encoding=unicode&pool=5",   
+     "m1": "mysql://user:password@alpha.server.com:3306/mydatabase?pool=10",     
+     "m2": "postgres://user:password@beta.server.com:3306/mydatabase?pool=10",
+     "m3": {"database": "xbar_shard5", "adapter": "mysql2", "host": "localhost" }
+  }, 
+  "environments": {
+    "development": {
+      "shards": [
+        {"name": "shard_one", "connections": ["p1", "p2"]},
+        {"name": "shard_one", "connections": ["p1", "p2"]}
+      ] 
+    },
+		"test": {
+      "shards": [
+        {"name": "shard_one", "connections": ["p1", "p2"]},
+        {"name": "shard_one", "connections": ["p1", "p2"]}
+      ]
+    },
+    "production": {
+      "shards": [
+        {"name": "shard_one", "connections": ["p1", "p2"]},
+        {"name": "shard_one", "connections": ["p1", "p2"]}
+      ]
+    }
+  }
+}

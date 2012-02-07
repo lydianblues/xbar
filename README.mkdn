@@ -1,0 +1,202 @@
+# XBar  - Easy Database Sharding for ActiveRecord
+
+## General Design
+
+The XBar project is derived from *Octopus*.  Octopus showed that the
+implementation technique of using a proxy for the
+`ActiveRecord::ConnectionAdapters::AbstractAdapter` object instances
+is possible.  This proxy implements a sort of *late binding*,
+returning a real abstract adapter object that depends on the current
+state of the proxy, especially on the value of the `current_shard`.
+Many of the tricky pieces of code, especially those for managing
+associations, come from Octopus.
+
+## Changes from Octopus
+
+The Octopus implementation has been modified to support efficient
+dynamic reconfiguration.  The configuration is given in a JSON
+document, rather than YAML.  This makes it convenient to update the
+application over the network using the standard JSON over HTTP
+technique.  The JSON document supports multiple application
+environments. These align with Rails environments when Rails is
+present. Unlike Octopus, this document format does not allow multiple
+'Octopus' evironments.  Instead, there is an `xbar_env` which
+essentially specifies a *different* JSON file to use.
+
+Another change is that shards that are themselves a collection of
+mirrors is supported.  Mirroring does not take place among shards, it
+takes place among the mirrors that constitute a shard.  Replication
+among the mirrors is expected to be handling by some database specific
+technique, such as native *MySQL* replication.
+
+The Octopus `Proxy` class has been split into two classes `Proxy` and
+`Shard`, and into a module `Mapper`.  `Mapper` contains the in-memory
+representation of the current configuration.  Each `Proxy` instance no
+longer has its own copy of the configuration.  There is exactly one
+`Mapper` module for the entire application, necessarily true, since
+its a *module*.  As before there is one `Proxy` instance per thread,
+which allows per-thread state to be stored in the instance.  A `Proxy`
+instance references a collection of `Shard` instances.  Each `Shard`
+instance manages a set of replicas for that shard.
+
+The concept of a *group* as used in Octopus is mostly gone.  Vestiges
+of it exist in the migration code.  Thus a migration can still specify
+that it should take place on multiple shards.  In the general case, a
+group concept would fork writes to send them to multiple shards.  This 
+is only practical if the writes are performed in parallel in separate
+threads.  The current `Proxy` would become a group manager and we'd
+have a hierarchy something like this:
+
+    Proxy (set of Groups) -> Group (set of Shards) -> Shard (set of
+    replicas)
+	
+This complexity is too great for the first version of `XBar`.
+
+## Concepts
+
+### Mapper
+
+The mapper is a module that maintains the state of the database servers, shards,
+replication, and databases.  It is configured via a JSON document.  The JSON
+document can be in the local file system, or it can be delivered over HTTP.  A
+new JSON document can be installed at any time.  The mapper does not maintain
+any per-thread state. All the proxies get their mapping information directly
+from the mapper.  Some information is cached in each proxy, optimized for use in
+the proxy.  Thus when the JSON document is changed, the mapper will notify each
+proxy to rebuild its state.
+
+### Proxy
+
+An instance of the `Proxy` object exists per thread.  Thus thread-local state
+can be kept directly in the proxy, and the proxy can refer to global state in
+the mapper (and in the `XBar` module itself).  Each proxy registers with the
+mapper when it is created so that the mapper can notify the proxy of changes to
+the global configuration.
+
+A proxy is only responsible for managing shards, that is, except for some
+initialization code, it has no knowledge of replicas within a shard.  It has a
+list, the `shard_list`, that maps shard names to `Shard` objects.  For each SQL
+statement, block of statements, or transaction, the proxy choose a shard and
+deletegates the operation to the shard.  The shard, in turn, chooses the particular
+replica to use.
+
+### Shard
+
+The term *shard* is used as it is used in MongoDB.  A shard acts like an
+independent database.  In our case, the replication within the shard is handled
+by some external means such as native MySQL replication.  Nevertheless, XBar
+knows about the replicas within the shard, and it knows which replica is the
+replication master. This allows XBar to direct transactions to the master shard,
+and reads to the (eventually-consistent) replicas within the shard.
+
+The shard is a per-thread object, referenced only from a proxy.  Thus the
+overall structure is tree-like.  One mapper references a collection of proxies
+(one per thread), and each proxy references a collection of shards.  Each shard
+object references a list of `ActiveRecord::ConnectionAdapters::ConnectionPool`
+instances that the shard uses to select connections to replicas within the
+shard.
+
+### Environments
+
+XBar has three concepts all called *environments*.  First, there is the
+*rails_env* that is inherited from Rails when this gem is included in a Rails
+application.  Second, the *xbar_env* is the name of the configuration file that
+is currently in effect.  In the case where the configuration was loaded via a
+JSON document over HTTP, a name for the *xbar_env* is generated in some other
+way (TBD).  Finally, there is the *app_env*, that functions much like
+*rails_env* when Rails is not present.  When Rails is present, *app_env* is read
+only and always has the same value as *rails_env*.  When Rails is not present,
+*app_env* can be selected by the user.  In either case, its value should be name
+of an environment stanza in the current configuration file.
+
+## Getting Started
+
+The *examples* directory at the top level of the source distribution
+has some stand-alone examples that show how to set up and use `XBar`.
+
+## Using XBar
+
+XBar adds a method to each `ActiveRecord` Class and object: the using
+method is used to select the shard like this:
+
+```ruby
+    User.where(:name => "Thiago").limit(3).using(:slave_one)
+```
+
+XBar also supports queries within a block. When you pass a block to
+the using method, all queries inside the block will be sent to the
+specified shard.
+```ruby
+    XBar.using(:slave_two) do
+      User.create(:name => "Mike")
+    end
+```
+
+Each model instance knows which shard it came from so this will work
+automatically:
+```ruby
+    # This will find the user in the shard1
+    @user = User.using(:shard1).find_by_name("Joao")
+
+    # This will find the user in the master database
+    @user2 = User.find_by_name("Jose")
+
+    #Sets the name
+    @user.name = "Mike"
+
+    # Save the user in the correct shard, shard1.
+    @user.save
+```
+
+### Migrations
+
+In migrations, you also have access to the using method. The syntax is
+basically the same. This migration will run in the brazil and canada
+shards.
+```ruby
+    class CreateUsersOnBothShards < ActiveRecord::Migration
+      using(:brazil, :canada)
+
+      def self.up
+        User.create!(:name => "Both")
+      end
+
+      def self.down
+        User.delete_all
+      end
+    end
+```
+
+### Rails Controllers
+
+If you want to send a specified action, or all actions from a
+controller, to a specific shard, use this syntax:
+```ruby
+    class ApplicationController < ActionController::Base
+      around_filter :select_shard
+
+      def select_shard(&block)
+        XBar.using(:brazil, &block)
+      end
+    end
+```
+
+## Important!  Sometimes, when a connection isn't used for much time,
+this will makes ActiveRecord raising an exception. if you have this
+kind of applications, please, add the following line to your
+configuration:
+```ruby
+    verify_connection: true
+```
+
+This will tell XBar to verify the connection before sending the query.
+
+## Mixing XBar with the Rails multiple database model
+If you want to set a custom connection to a specific model, use this syntax:
+```ruby
+    #This class sets its own connection
+    # establish_connection will not work, use xbar_establish_connection instead.
+    class CustomConnection < ActiveRecord::Base
+      xbar_establish_connection(:adapter => "mysql", :database => "xbar_shard2")
+    end
+```

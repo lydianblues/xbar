@@ -1,0 +1,27 @@
+{
+    "__COMMENT": "Shards for the XBar meta-environment.",
+    
+    "connections": {
+        "alone_shard": "mysql2://localhost/xbar_shard5",
+        "aug2009": {"database": "xbar_shard2", "adapter": "mysql2", "host": "localhost"},
+        "aug2010": {"database": "xbar_shard3", "adapter": "mysql2", "host": "localhost"},
+        "aug2011": {"database": "xbar_shard4", "adapter": "mysql2", "host": "localhost"},
+        "postgresql_shard": {"adapter": "postgresql", "username": "postgres", "password": null, 
+          "database": "xbar_shard1", "encoding": "unicode"},
+            "sqlite_shard": { "adapter": "sqlite3", "database": "/tmp/database.sqlite3"},
+            "canada": "mysql2://localhost/xbar_shard2",
+        "brazil": {"database": "xbar_shard3", "adapter": "mysql2", "host": "localhost"},
+        "russia": {"database": "xbar_shard4", "adapter": "mysql2", "host": "localhost"}
+    },
+    "environments": {
+        "shards": {
+            "shards": {
+                "alone_shard": "alone_shard",
+                "postgresql_shard": "postgresql_shard",
+                "sqlite_shard": "sqlite_shard",
+                "history_shard": ["aug2009", "aug2010", "aug2011"],
+                "country_shard": ["canada", "brazil", "russia"]
+            }    
+        }
+    }
+}

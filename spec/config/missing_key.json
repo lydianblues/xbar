@@ -1,0 +1,20 @@
+{
+    "__COMMENT": "Acme Corporation Environments with a missing key error",
+
+    "connections": {
+        "mysql_m": "mysql2://root@localhost:3306/master",
+        "inventory_1": "postgres://postgres@127.0.0.1/russia_1",      
+        "inventory_2": "postgres://postgres@127.0.0.1/russia_2",
+        "sales_1": "mysql2://root:graceling@deimos.thirdmode.com:3307/canada"   
+    },
+
+    "environments": {
+        "test": {
+            "shards": {
+                "master": "mysql_m",
+                "sales": "sales_1",
+                "inventory": "inventory_3"
+            }
+        }
+    }
+}

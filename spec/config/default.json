@@ -1,0 +1,160 @@
+{
+    "__COMMENT": "Shards for the default meta-environment.",
+
+    "connections": {
+        "mysql_m": "mysql2://root@localhost:3306/master",
+        "rogue_s": "mysql2://root@localhost:3306/rogue",
+        "london_s": "mysql2://root:graceling@deimos.thirdmode.com:3307/london",
+        "moscow_s": "postgres://postgres@127.0.0.1/moscow",
+        "paris_s": { "adapter": "sqlite3", "database": "/tmp/paris.sqlite3"},
+
+        "russia_1": "postgres://postgres@127.0.0.1/russia_1",      
+        "russia_2": "postgres://postgres@127.0.0.1/russia_2",      
+        "russia_3": "postgres://postgres@127.0.0.1/russia_3",
+
+        "canada_1": "mysql2://root:graceling@deimos.thirdmode.com:3307/canada",      
+        "canada_2": "mysql2://root:graceling@deimos.thirdmode.com:3308/canada",      
+        "canada_3": "mysql2://root:graceling@deimos.thirdmode.com:3309/canada",
+        
+        "brazil_1": "mysql2://root:graceling@deimos.thirdmode.com:3307/brazil",
+        "brazil_2": "mysql2://root:graceling@deimos.thirdmode.com:3308/brazil",      
+        "brazil_3": "mysql2://root:graceling@deimos.thirdmode.com:3309/brazil",
+
+        "__COMMENT": "The china database is setup in the MySQL configuration",
+        "__COMMENT": "to NOT be replicated.",
+        "china_1": "mysql2://root:graceling@deimos.thirdmode.com:3307/china",      
+        "china_2": "mysql2://root:graceling@deimos.thirdmode.com:3308/china"
+    },
+
+    "environments": {
+        "test": {
+						"any_option": true,
+            "shards": {
+                "master": "mysql_m",
+                
+                "__COMMENT": "MySQL singleton shard.",
+                "london": "london_s",
+
+                "__COMMENT": "SQLite singleton shard.",
+                "paris": "paris_s",
+
+                "__COMMENT": "Postgres singleton shard.",
+                "moscow": "moscow_s",
+                                                              
+                "__COMMENT": "Postgres unreplicated shard (for now)",
+		"__COMMENT": "One server has three different databases.",
+                "russia": ["russia_1", "russia_2", "russia_3"],
+
+                "__COMMENT": "Convenience to get at the shard replicas as shards.",
+                "russia_east": "russia_1",
+                "russia_central": "russia_2",
+                "russia_west": "russia_3",
+                                                                
+                "__COMMENT": "MySQL Fully replicated shard",
+                "canada": ["canada_1", "canada_2", "canada_3"],
+
+               "__COMMENT": "Convenience to get at the shard replicas as shards.",
+                "canada_east": "canada_1",
+                "canada_central": "canada_2",
+                "canada_west": "canada_3",
+
+                "__COMMENT": "MySQL fully relicated shard",
+                "brazil": ["brazil_1", "brazil_2", "brazil_3"],
+                                                                
+                "__COMMENT": "MySQL unreplicated shard",
+                "china": ["china_1", "china_2"],
+                                                                
+                "__COMMENT": "Convenience to get at the shard replicas as shards.",
+		"__COMMENT": "Two different servers have the same-named database.",
+                "china_east": "china_1",
+                "china_west": "china_2"
+            }
+        },
+        "development": {
+			      "verify_connection": true,
+				    "favorite_color": "blue",
+            "shards": {
+                "master": "mysql_m",
+
+                "__COMMENT": "MySQL singleton shard.",
+                "london": "london_s",
+
+                "__COMMENT": "SQLite singleton shard.",
+                "paris": "paris_s",
+
+                "__COMMENT": "Postgres singleton shard.",
+                "moscow": "moscow_s",
+
+                "__COMMENT": "Postgres unreplicated shard (for now)",
+		            "__COMMENT": "One server has three different databases.",
+                "russia": ["russia_1", "russia_2", "russia_3"],
+
+                "__COMMENT": "Convenience to get at the shard replicas as shards.",
+                "russia_east": "russia_1",
+                "russia_central": "russia_2",
+                "russia_west": "russia_3",
+
+                "__COMMENT": "MySQL Fully replicated shard",
+                "canada": ["canada_1", "canada_2", "canada_3"],
+
+               "__COMMENT": "Convenience to get at the shard replicas as shards.",
+                "canada_east": "canada_1",
+                "canada_central": "canada_2",
+                "canada_west": "canada_3",
+
+                "__COMMENT": "MySQL fully relicated shard",
+                "brazil": ["brazil_1", "brazil_2", "brazil_3"],
+
+                "__COMMENT": "MySQL unreplicated shard",
+                "china": ["china_1", "china_2"],
+
+                "__COMMENT": "Convenience to get at the shard replicas as shards.",
+		"__COMMENT": "Two different servers have the same-named database.",
+                "china_east": "china_1",
+                "china_west": "china_2"
+            }
+        },
+        "staging": {
+            "shards": {
+                "master": "mysql_m",
+                
+                "__COMMENT": "MySQL singleton shard.",
+                "london": "london_s",
+
+                "__COMMENT": "SQLite singleton shard.",
+                "paris": "paris_s",
+
+                "__COMMENT": "Postgres singleton shard.",
+                "moscow": "moscow_s",
+                                                              
+                "__COMMENT": "Postgres unreplicated shard (for now)",
+		"__COMMENT": "One server has three different databases.",
+                "russia": ["russia_1", "russia_2", "russia_3"],
+
+                "__COMMENT": "Convenience to get at the shard replicas as shards.",
+                "russia_east": "russia_1",
+                "russia_central": "russia_2",
+                "russia_west": "russia_3",
+                                                                
+                "__COMMENT": "MySQL Fully replicated shard",
+                "canada": ["canada_1", "canada_2", "canada_3"],
+
+               "__COMMENT": "Convenience to get at the shard replicas as shards.",
+                "canada_east": "canada_1",
+                "canada_central": "canada_2",
+                "canada_west": "canada_3",
+
+                "__COMMENT": "MySQL fully relicated shard",
+                "brazil": ["brazil_1", "brazil_2", "brazil_3"],
+                                                                
+                "__COMMENT": "MySQL unreplicated shard",
+                "china": ["china_1", "china_2"],
+                                                                
+                "__COMMENT": "Convenience to get at the shard replicas as shards.",
+		"__COMMENT": "Two different servers have the same-named database.",
+                "china_east": "china_1",
+                "china_west": "china_2"
+            }
+        }
+    }
+}
