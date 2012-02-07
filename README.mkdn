@@ -1,5 +1,9 @@
 # XBar  - MongoDB Style Sharding for ActiveRecord
 
+## Supported versions
+*Caution* -- only ActiveRecord 3.2 is currently supported.  This 
+will soon be improved.
+
 ## General Design
 
 The XBar project is derived from *Octopus*.  Octopus showed that the
@@ -173,6 +177,7 @@ shards.
 
 If you want to send a specified action, or all actions from a
 controller, to a specific shard, use this syntax:
+
 ```ruby
     class ApplicationController < ActionController::Base
       around_filter :select_shard
