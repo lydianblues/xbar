@@ -201,7 +201,8 @@ configuration:
 
 This will tell XBar to verify the connection before sending the query.
 
-## Mixing XBar with the Rails multiple database model
+## Mixing XBar with the Rails Multiple Database Mechanism
+
 If you want to set a custom connection to a specific model, use this
 syntax:
 
