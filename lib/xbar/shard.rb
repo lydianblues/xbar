@@ -24,10 +24,11 @@ module XBar
       if XBar.debug
         puts("Shard##{BLUE_TEXT}run_queries#{RESET_COLORS}: " + 
           "method = #{RED_TEXT}#{method}#{RESET_COLORS}, " +
-          "shard= #{shard_name}, " +
+          "shard= #{shard_name}, slave_read=#{!!proxy.slave_read_allowed}, " +
           "block_scope = #{in_block_scope?}")
       end
-      if method.to_s =~ /select/ && !in_block_scope? # XXX needed???, eventual flag??
+      if slave_read_allowed(method)
+        proxy.slave_read_allowed = false # just once
         # OK to send the query to a slave
         run_queries_on_slave(method, *args, &block)
       else
@@ -76,9 +77,14 @@ module XBar
       prepare_connection_pool(replica)
       replica.connection.send(method, *args, &block)
     end
+
+    def slave_read_allowed(method)
+      method.to_s =~ /select/ && !current_model.unreplicated_model? &&
+        (proxy.slave_read_allowed || !in_block_scope?)
+    end
     
     def run_queries_on_slave(method, *args, &block)
-      if current_model.unreplicated_model? || @slaves.empty?
+      if @slaves.empty?
         replica = @master
       else
         if XBar.debug

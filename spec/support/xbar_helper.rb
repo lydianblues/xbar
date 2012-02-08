@@ -31,6 +31,8 @@ ensure
   XBar::Mapper.reset(xbar_env: 'default', app_env: prev_env)
 end
 
+alias :using_app_environment :using_environment
+
 def set_xbar_env(xbar_env, app_env = nil)
   opts = {xbar_env: xbar_env.to_s, :clear_cache => true}
   if app_env && !defined?(Rails)

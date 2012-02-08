@@ -28,7 +28,7 @@
 
     "environments": {
         "test": {
-						"any_option": true,
+            "any_option": true,
             "shards": {
                 "master": "mysql_m",
                 
@@ -42,10 +42,12 @@
                 "moscow": "moscow_s",
                                                               
                 "__COMMENT": "Postgres unreplicated shard (for now)",
-		"__COMMENT": "One server has three different databases.",
+                "__COMMENT": "One server has three different databases.",
                 "russia": ["russia_1", "russia_2", "russia_3"],
 
                 "__COMMENT": "Convenience to get at the shard replicas as shards.",
+                "__COMMENT": "Some tests assume that the Russia environment is",
+                "__COMMENT": "not really replicated.",
                 "russia_east": "russia_1",
                 "russia_central": "russia_2",
                 "russia_west": "russia_3",
@@ -65,14 +67,14 @@
                 "china": ["china_1", "china_2"],
                                                                 
                 "__COMMENT": "Convenience to get at the shard replicas as shards.",
-		"__COMMENT": "Two different servers have the same-named database.",
+                "__COMMENT": "Two different servers have the same-named database.",
                 "china_east": "china_1",
                 "china_west": "china_2"
             }
         },
         "development": {
-			      "verify_connection": true,
-				    "favorite_color": "blue",
+            "verify_connection": true,
+            "favorite_color": "blue",
             "shards": {
                 "master": "mysql_m",
 
@@ -86,7 +88,7 @@
                 "moscow": "moscow_s",
 
                 "__COMMENT": "Postgres unreplicated shard (for now)",
-		            "__COMMENT": "One server has three different databases.",
+                "__COMMENT": "One server has three different databases.",
                 "russia": ["russia_1", "russia_2", "russia_3"],
 
                 "__COMMENT": "Convenience to get at the shard replicas as shards.",
@@ -109,7 +111,7 @@
                 "china": ["china_1", "china_2"],
 
                 "__COMMENT": "Convenience to get at the shard replicas as shards.",
-		"__COMMENT": "Two different servers have the same-named database.",
+                "__COMMENT": "Two different servers have the same-named database.",
                 "china_east": "china_1",
                 "china_west": "china_2"
             }
@@ -128,7 +130,7 @@
                 "moscow": "moscow_s",
                                                               
                 "__COMMENT": "Postgres unreplicated shard (for now)",
-		"__COMMENT": "One server has three different databases.",
+                "__COMMENT": "One server has three different databases.",
                 "russia": ["russia_1", "russia_2", "russia_3"],
 
                 "__COMMENT": "Convenience to get at the shard replicas as shards.",
@@ -151,9 +153,18 @@
                 "china": ["china_1", "china_2"],
                                                                 
                 "__COMMENT": "Convenience to get at the shard replicas as shards.",
-		"__COMMENT": "Two different servers have the same-named database.",
+                "__COMMENT": "Two different servers have the same-named database.",
                 "china_east": "china_1",
                 "china_west": "china_2"
+            }
+        },
+        "local_test": {
+            "shards": {
+                "master": "paris_s",
+                "russia": ["russia_1", "russia_2", "russia_3"],
+                "russia_east": "russia_1",
+                "russia_central": "russia_2",
+                "russia_west": "russia_3"
             }
         }
     }

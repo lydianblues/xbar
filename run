@@ -24,4 +24,4 @@ fi
 
 echo $TEST
 
-bundle exec ${RUBY} ${RSPEC} -fd -c ${TEST}
+bundle exec ${RUBY} ${RSPEC} -fd -b -c ${TEST}

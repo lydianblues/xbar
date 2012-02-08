@@ -18,6 +18,8 @@ class XBar::Proxy
   attr_reader :current_model, :current_shard
   
   attr_reader :shard_list
+
+  attr_accessor :slave_read_allowed
  
   def initialize
     puts "Initializing new proxy."

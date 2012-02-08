@@ -153,6 +153,31 @@ automatically:
     @user.save
 ```
 
+Another variant of `using` is `using_any`.  It many be invoked as
+
+```ruby
+	# When the model is replicated, allow the find to take
+	# place on a slave.
+    User.using_any.find(...)
+	
+	# When the model is replicated, allow the find to take place on
+	# any slave of the Canada shard.
+	User.using(:canada).find(...)
+	
+	# This is essentially the same as the above.
+	XBar.using(:canada) do
+		User.using_any.find(...)
+	end	
+	
+	# The find will still take place on any slave of the Canada shard.
+	XBar.using(:brazil) do
+		User.using_any(:canada).find(...)
+	end
+```
+
+The `using_any` construction only is valid for the immediately
+following database 'select' type operation. 
+
 ### Migrations
 
 In migrations, you also have access to the using method. The syntax is

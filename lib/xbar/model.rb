@@ -126,6 +126,15 @@ module XBar::Model
       return XBar::ScopeProxy.new(shard_name, self)
     end
 
+    def using_any(shard_name = nil)
+      connection_proxy.slave_read_allowed = true
+      if shard_name
+        using(shard_name)
+      else
+        self
+      end
+    end
+
     def unreplicated_model
       if XBar.rails32?
         self._unreplicated = true
