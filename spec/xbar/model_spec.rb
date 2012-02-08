@@ -79,14 +79,12 @@ describe XBar::Model do
     end
 
     it "should allow creating more than one user" do
-      XBar.debug = true
       User.using(:canada).create([{ :name => 'America User 1' }, { :name => 'America User 2' }])
       User.create!(:name => "Thiago")
       User.using(:canada).find_by_name("America User 1").should_not be_nil
       User.using(:canada).find_by_name("America User 2")#.should_not be_nil
       User.using(:master).find_by_name("Thiago").should_not be_nil
       User.all.size.should == 1 # fail -- America User 2 is being created on master!!!
-      XBar.debug = false
     end
 
     it "should work when you have a SQLite3 shard" do

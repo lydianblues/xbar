@@ -123,7 +123,7 @@ module XBar
         self.xbar_env = new_xbar_env
         self.app_env = options[:app_env] if options[:app_env]
             
-        # puts "XBar::Mapper#reset, xbar_env=#{xbar_env}, app_env=#{app_env}"
+        puts "XBar::Mapper#reset, xbar_env=#{xbar_env}, app_env=#{app_env}"
         initialize_shards(config)
         initialize_options(config)
         

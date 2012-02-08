@@ -49,8 +49,6 @@ class XBar::Proxy
     # case of migration.  Make it an array in all cases to check it.
     Array(shard_name).each do |s|
       if !@shard_list.member? s
-        puts "<<< #{@shard_list.keys} >>>"
-        puts "<<< #{XBar::Mapper.shards.keys} >>>"
         raise "Nonexistent Shard Name: #{s}"
       end
     end

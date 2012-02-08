@@ -337,6 +337,7 @@ describe XBar::Association do
         role = @new_brazil_programmer.projects.create(:name => "New VB App :-/")
         @new_brazil_programmer.projects.find(:first).should == role
         @new_brazil_programmer.projects.destroy_all
+        sleep(0.5) # Replication delay sometimes causes a spurious failure
         @new_brazil_programmer.projects.find(:first).should be_nil
       end
 

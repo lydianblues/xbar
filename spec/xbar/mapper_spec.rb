@@ -16,7 +16,7 @@ describe XBar::Mapper do
     end
 
      it "should return all environments" do
-      XBar::Mapper.environments.should == ["test", "development", "staging"]
+      XBar::Mapper.environments.should == ["test", "development", "staging", "local_test"]
     end
 
     it "should work with thinking sphinx" do

@@ -49,16 +49,11 @@ module XBar::Model
     if new_record? || connection_proxy.in_block_scope?
       if XBar.debug
         type = new_record? ? "New" : "Existing"
-        puts "#{type} model callback, current_shard=#{connection_proxy.current_shard}, " +
-          "block_scope=#{connection_proxy.in_block_scope?}"
       end
       self.current_shard = connection_proxy.current_shard
     else
       if XBar.debug
         type = new_record? ? "New" : "Existing"
-        puts "#{type} model callback, current_shard=#{connection_proxy.current_shard} " +
-          "last_current_shard=#{connection_proxy.last_current_shard}, " +
-          "block_scope=#{connection_proxy.in_block_scope?}"
       end
       self.current_shard = connection_proxy.last_current_shard
     end
@@ -78,7 +73,6 @@ module XBar::Model
     end
 
     def connection_proxy
-      puts "Model allocating new connection proxy"  unless Thread.current[:connection_proxy]
       Thread.current[:connection_proxy] ||= XBar::Proxy.new
     end
 
@@ -86,10 +80,7 @@ module XBar::Model
       if should_use_normal_connection?
         connection_without_xbar
       else
-        #puts "Model connection with octopus" if XBar.debug
-        #if (connection_proxy.current_model.nil?) || (self !=  ActiveRecord::Base)
-          connection_proxy.current_model = self  
-        #end
+        connection_proxy.current_model = self  
         connection_proxy
       end
     end
