@@ -76,10 +76,13 @@ module XBar
 
       def config_from_file
         file_name = config_file_name
-        puts "XBar::Mapper, reading configuration from file #{file_name}"
+       
         if File.exists? file_name
+          puts "XBar::Mapper, reading configuration from file #{file_name}"
           config = JSON.parse(ERB.new(File.read(file_name)).result)
         else
+          puts("XBar::Mapper: No config file #{file_name} -- " +
+            "Deriving defaults.")
           config = {}
         end
         HashWithIndifferentAccess.new(config)
@@ -175,6 +178,9 @@ module XBar
       end
       
       def register(proxy)
+
+	reset if shards.empty?
+
         @@proxies << proxy
         
         # If we hang on to a reference to proxies here, the proxy will
@@ -285,7 +291,7 @@ module XBar
     end
     
     # Give module XBar::Mapper the above class methods.
-     self.extend(ClassMethods)
+    self.extend(ClassMethods)
     
     Mapper.exports.each do |meth|
       define_method(meth) {Mapper.send(meth)}
