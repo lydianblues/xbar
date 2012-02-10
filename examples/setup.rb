@@ -10,7 +10,8 @@ require 'xbar'
 module Examples
   module Setup
 
-    MIGRATIONS_ROOT = File.expand_path(File.join(File.dirname(__FILE__),  'migrations'))
+    MIGRATIONS_ROOT = File.expand_path(File.join(File.dirname(__FILE__),
+      'migrations'))
 
     def self.start(xbar_env, app_env, version = nil)
 

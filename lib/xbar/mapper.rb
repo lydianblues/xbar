@@ -78,11 +78,15 @@ module XBar
         file_name = config_file_name
        
         if File.exists? file_name
-          puts "XBar::Mapper, reading configuration from file #{file_name}"
+          if XBar.debug
+            puts "XBar::Mapper, reading configuration from file #{file_name}"
+          end
           config = JSON.parse(ERB.new(File.read(file_name)).result)
         else
-          puts("XBar::Mapper: No config file #{file_name} -- " +
-            "Deriving defaults.")
+          if XBar.debug
+            puts("XBar::Mapper: No config file #{file_name} -- " +
+                 "Deriving defaults.")
+          end
           config = {}
         end
         HashWithIndifferentAccess.new(config)
@@ -126,7 +130,9 @@ module XBar
         self.xbar_env = new_xbar_env
         self.app_env = options[:app_env] if options[:app_env]
             
-        puts "XBar::Mapper#reset, xbar_env=#{xbar_env}, app_env=#{app_env}"
+        if XBar.debug
+          puts "XBar::Mapper#reset, xbar_env=#{xbar_env}, app_env=#{app_env}"
+        end
         initialize_shards(config)
         initialize_options(config)
         
@@ -185,7 +191,22 @@ module XBar
         
         # If we hang on to a reference to proxies here, the proxy will
         # never be garbage collected, even when the thread that it was
-        # assigned to goes away.  Find a way to fix this. XXX  
+        # assigned to goes away.  Find a way to fix this. XXX
+
+        # Also what if the proxy (via its shards) is holding on to checked
+        # out connections from its associated connection pools? XXX
+      
+      end
+
+      def disconnect_all!
+        shards.each do |name, pool_list|
+          pool_list.each_with_index do |p, i|
+            if p.connected?
+              puts "shard=#{name}, object_id=#{p.object_id}, connections = #{p.connections.size}"
+              p.disconnect!
+            end
+          end
+        end
       end
       
       def app_env
@@ -244,7 +265,6 @@ module XBar
             end
           end
         end
-        # @@shards[:master] = [@@connections[:master]]
       end
       
       # Should return a ConnectionPool.

@@ -4,7 +4,6 @@
 
 require 'rspec'
 require 'spec_helper'
-require 'support/database_models'
 
 module XBar
   def self.directory

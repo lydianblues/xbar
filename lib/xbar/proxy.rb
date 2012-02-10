@@ -22,7 +22,9 @@ class XBar::Proxy
   attr_accessor :slave_read_allowed
  
   def initialize
-    puts "Initializing new proxy."
+    if XBar.debug
+      puts "Initializing new proxy."
+    end
     register
     reset_shards
     clean_proxy

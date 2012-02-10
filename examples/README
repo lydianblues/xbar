@@ -1,5 +1,7 @@
 Set your environment variable BUNDLE_GEMFILE to one of the
 gemfiles in ../gemfiles, then do
 
-bundle exec ruby example1.rb
+'bundle exec ruby <file>'
+
+where file is 'basic.rb' or 'multithread.rb', etc.
 

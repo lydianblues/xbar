@@ -96,6 +96,6 @@ module XBar
       end
       run_queries_on_replica(replica, method, *args, &block) # return sql
     end
-    
+
   end
 end

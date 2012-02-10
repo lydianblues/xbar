@@ -5,16 +5,18 @@ require "active_record"
 require "action_controller"
 require "xbar"
 require "support/xbar_helper"
-require "support/database_models"
 
 MIGRATIONS_ROOT = File.expand_path(File.join(File.dirname(__FILE__),  'migrations'))
 
 XBar.directory = File.expand_path("../../spec", __FILE__)
 
+# Must be after setting the XBar directory.
+require "support/database_models"
+
 RSpec.configure do |config|
   
   config.before(:each) do
-    XBar.stub!(:directory).and_return(File.dirname(__FILE__))
+    XBar.directory = File.expand_path("../../spec", __FILE__)
   end
   
   config.after(:each) do
