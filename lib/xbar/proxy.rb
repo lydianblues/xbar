@@ -17,7 +17,7 @@ class XBar::Proxy
   # Setters for these are written by hand below.
   attr_reader :current_model, :current_shard
   
-  attr_reader :shard_list
+  attr_reader :shard_list, :adapters
 
   attr_accessor :slave_read_allowed
  
@@ -29,6 +29,12 @@ class XBar::Proxy
     register
     reset_shards
     clean_proxy
+    @adapters = XBar::Mapper.adapters
+
+    @mycond = ConditionVariable.new
+    @mylock = Mutex.new
+    @myrelease = ConditionVariable.new
+    @myrelease_lock = Mutex.new
   end
 
   def request_reset
@@ -88,7 +94,7 @@ class XBar::Proxy
   end
   
   def should_clean_table_name?
-    adapters.size > 1
+    @adapters.size > 1
   end
   
   def verify_connection
@@ -160,7 +166,9 @@ class XBar::Proxy
   end
 
   def connection_pool
-    cp = shards[current_shard].first 
+    # Or we could make a case for selecting master replica from
+    # the master shard, rather than the current shard. XXX.
+    cp = select_shard.master
     cp.automatic_reconnect = true if XBar.rails31?
     cp
   end
@@ -205,25 +213,45 @@ class XBar::Proxy
     end
   end
 
+  def request_reset
+    puts "request_reset: Is it locked? #{@mylock.locked?}"
+    @mylock.synchronize do
+      @reset = true
+      puts "Waiting on condition var..."
+      @mycond.wait(@mylock)
+      puts "After wait on condition var..."
+    end
+  end
+
+  def release
+    #@release.signal
+  end
+
   def check_for_reset
+    puts "Entering check_for_reset @reset = #{@reset}, xtrans = #{open_transactions}"
+    # Except for the possible concurrency of a thread requesting a reset,
+    # the Proxy is single threaded.  The one proxy thread that we have is
+    # here, and no transactions are open.  
     if @reset && (open_transactions == 0)
-      @reset = false
+
       reset_shards
       clean_proxy
+      @adapters = adapters
+
+      puts "check_for_reset: Is it locked? #{@mylock.locked?}"
+      @mylock.synchronize do
+        @reset = false
+        @mycond.signal
+      end
+        
+      #@release_lock.synchronize do
+      #  @release.wait(@release_lock)
+      #end
+
     end
   end
 
   private
-  
-  # Called from mapper.
-  def reset_proxy
-#    @current_shard = :master
-    if XBar.debug
-      puts "Proxy##{BLUE_TEXT}reset_proxy#{RESET_COLORS}: #{current_shard}"
-    end
-#    clear_block_scope
-    reset_shards
-  end
   
   def reset_shards
     @shard_list = HashWithIndifferentAccess.new
@@ -240,6 +268,7 @@ class XBar::Proxy
   end
 
   def open_transactions
+    # The shards as known to the mapper have already changed.
     @shard_list.values.inject(0) {|sum, shard| sum = shard.open_transactions}
   end
 
