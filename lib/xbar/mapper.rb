@@ -169,7 +169,7 @@ module XBar
         end
         
         @@proxies.each do |proxy|
-          proxy.reset_proxy
+          proxy.request_reset
         end
         self
       end

@@ -259,16 +259,14 @@ describe XBar::Mapper do
       end
       
     end
-    
-
   end
-  
 end
 
 describe "when you specify a bogus application environment" do
   before(:each) do
     set_xbar_env("acme", "bogus")
     @proxy = Thread.current[:connection_proxy]
+    @proxy.check_for_reset
   end
 
   it "should initialize the list of shards" do

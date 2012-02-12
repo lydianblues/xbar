@@ -58,6 +58,22 @@ module XBar
       master.connection.quote_table_name(table_name)
     end
         
+    def open_transactions
+      tr_count = 0
+      @master.connections.inject(0) {|s, c| s + c.open_transactions}
+      @master.connections.each do |c|
+        val = c.instance_variable_get(:@_current_transaction_records) # nil or array
+        tr_count += val.size if val
+      end
+      @slaves.each do |s|
+        s.connections.each do |c|
+          val = c.instance_variable_get(:@_current_transaction_records) # nil or array
+          tr_count += val.size if val
+        end
+      end
+      tr_count
+    end
+
     private
 
     def prepare_connection_pool(pool)

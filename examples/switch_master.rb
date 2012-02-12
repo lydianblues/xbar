@@ -28,6 +28,12 @@ end
   end
 end
 
+# Reset the Proxy while all the above I/O is going on.  The
+# config file is the same, except the master shard is different.
+puts "Before reset"
+sleep 0.5
+XBar::Mapper.reset(xbar_env: 'canada2', app_env: 'test')
+puts "After reset"
 threads.each(&:join)
 
 XBar::Mapper.disconnect_all!
@@ -39,7 +45,7 @@ if config[:adapter] == "mysql2"
   end
 
 end
-
+sleep 1
 puts User.using(:canada).all.size
 puts User.using(:canada).all.size
 puts User.using(:canada_east).all.size

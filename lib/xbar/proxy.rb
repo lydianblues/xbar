@@ -23,23 +23,22 @@ class XBar::Proxy
  
   def initialize
     if XBar.debug
-      puts "Initializing new proxy."
+      puts "Proxy##{ BLUE_TEXT}{initialize}#{RESET_COLORS}: Initializing new proxy."
     end
+    @reset = false
     register
     reset_shards
     clean_proxy
   end
-  
-  def reset_proxy
-    @current_shard = :master
-    puts ">>> reset_proxy: #{current_shard}" if XBar.debug
-    clear_block_scope
-    reset_shards
+
+  def request_reset
+    @reset = true
   end
-  
+
+  # Called from migration.
   def clean_proxy
     if XBar.debug
-      puts "Proxy##{BLUE_TEXT}clean_proxy=#{RESET_COLORS}: " +
+      puts "Proxy##{BLUE_TEXT}clean_proxy:#{RESET_COLORS}: " +
         "current shard = #{@current_shard}"
     end
     @current_shard = :master
@@ -47,8 +46,8 @@ class XBar::Proxy
   end
    
   def current_shard=(shard_name)
-    # shard name might actually be a list of shard names in the 
-    # case of migration.  Make it an array in all cases to check it.
+    # The shard hard name might actually be a list of shard names in
+    # the case of migration.  Make it an array in all cases to check it.
     Array(shard_name).each do |s|
       if !@shard_list.member? s
         raise "Nonexistent Shard Name: #{s}"
@@ -59,21 +58,6 @@ class XBar::Proxy
         "previous_shard = #{@current_shard}, new_shard = #{shard_name}"
     end
     @current_shard = shard_name
-  end
-
-  def select_shard
-    if current_shard.kind_of? Array
-      shard = current_shard.first
-      if current_shard.size != 1
-        puts "WARNING: selecting only first shard from array"
-      end
-    else
-      shard = current_shard
-    end
-    unless @shard_list[shard] 
-       puts "Shard not found: current_shard = #{shard}, @shard_list = #{@shard_list.keys}"     
-    end
-    @shard_list[shard]
   end
 
   def current_model=(model)
@@ -142,6 +126,7 @@ class XBar::Proxy
   end
 
   def transaction(options = {}, &block)
+    check_for_reset
     select_shard.transaction(options, &block)
   end
 
@@ -220,7 +205,25 @@ class XBar::Proxy
     end
   end
 
+  def check_for_reset
+    if @reset && (open_transactions == 0)
+      @reset = false
+      reset_shards
+      clean_proxy
+    end
+  end
+
   private
+  
+  # Called from mapper.
+  def reset_proxy
+#    @current_shard = :master
+    if XBar.debug
+      puts "Proxy##{BLUE_TEXT}reset_proxy#{RESET_COLORS}: #{current_shard}"
+    end
+#    clear_block_scope
+    reset_shards
+  end
   
   def reset_shards
     @shard_list = HashWithIndifferentAccess.new
@@ -234,7 +237,25 @@ class XBar::Proxy
       slaves = replicas[1..-1] # cdr, could be empty array
       @shard_list[shard_name] = XBar::Shard.new(self, shard_name, master, slaves)
     end
+  end
 
+  def open_transactions
+    @shard_list.values.inject(0) {|sum, shard| sum = shard.open_transactions}
+  end
+
+  def select_shard
+    if current_shard.kind_of? Array
+      shard = current_shard.first
+      if current_shard.size != 1
+        puts "WARNING: selecting only first shard from array"
+      end
+    else
+      shard = current_shard
+    end
+    unless @shard_list[shard] 
+       puts "Shard not found: current_shard = #{shard}, @shard_list = #{@shard_list.keys}"     
+    end
+    @shard_list[shard]
   end
 
   def insert_some_sql(conn, data)

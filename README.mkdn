@@ -162,7 +162,7 @@ Another variant of `using` is `using_any`.  It many be invoked as
 	
 	# When the model is replicated, allow the find to take place on
 	# any slave of the Canada shard.
-	User.using(:canada).find(...)
+	User.using_any(:canada).find(...)
 	
 	# This is essentially the same as the above.
 	XBar.using(:canada) do
