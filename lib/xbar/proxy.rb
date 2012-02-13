@@ -30,15 +30,7 @@ class XBar::Proxy
     reset_shards
     clean_proxy
     @adapters = XBar::Mapper.adapters
-
-    @mycond = ConditionVariable.new
     @mylock = Mutex.new
-    @myrelease = ConditionVariable.new
-    @myrelease_lock = Mutex.new
-  end
-
-  def request_reset
-    @reset = true
   end
 
   # Called from migration.
@@ -52,6 +44,7 @@ class XBar::Proxy
   end
    
   def current_shard=(shard_name)
+    check_for_reset
     # The shard hard name might actually be a list of shard names in
     # the case of migration.  Make it an array in all cases to check it.
     Array(shard_name).each do |s|
@@ -102,6 +95,7 @@ class XBar::Proxy
   end
 
   def run_queries_on_shard(shard_name, use_scope = true)
+    check_for_reset
     older_shard = current_shard 
     enter_block_scope if use_scope
     self.current_shard = shard_name
@@ -144,6 +138,11 @@ class XBar::Proxy
     select_shard.quote_table_name(table_name)
   end
 
+  def clear_cache!
+    check_for_reset    
+    select_shard.run_queries(:clear_cache!)
+  end
+  
   def method_missing(method, *args, &block)
     if XBar.debug
       puts("\nProxy##{BLUE_TEXT}method_missing#{RESET_COLORS}: " + 
@@ -151,7 +150,6 @@ class XBar::Proxy
         "current_shard=#{current_shard}, " +
         "in_block_scope=#{in_block_scope?}")
     end
-
     if method.to_s =~ /insert|select|execute/ && !in_block_scope? # should clean connection
       shard = @last_current_shard = current_shard
       clean_proxy
@@ -214,40 +212,25 @@ class XBar::Proxy
   end
 
   def request_reset
-    puts "request_reset: Is it locked? #{@mylock.locked?}"
     @mylock.synchronize do
       @reset = true
-      puts "Waiting on condition var..."
-      @mycond.wait(@mylock)
-      puts "After wait on condition var..."
     end
   end
 
-  def release
-    #@release.signal
+  def reset_complete?
+    @mylock.synchronize do
+      @reset == false
+    end
   end
 
   def check_for_reset
-    puts "Entering check_for_reset @reset = #{@reset}, xtrans = #{open_transactions}"
-    # Except for the possible concurrency of a thread requesting a reset,
-    # the Proxy is single threaded.  The one proxy thread that we have is
-    # here, and no transactions are open.  
     if @reset && (open_transactions == 0)
-
       reset_shards
       clean_proxy
       @adapters = adapters
-
-      puts "check_for_reset: Is it locked? #{@mylock.locked?}"
       @mylock.synchronize do
         @reset = false
-        @mycond.signal
       end
-        
-      #@release_lock.synchronize do
-      #  @release.wait(@release_lock)
-      #end
-
     end
   end
 

@@ -130,9 +130,9 @@ module XBar
         self.xbar_env = new_xbar_env
         self.app_env = options[:app_env] if options[:app_env]
             
-        #if XBar.debug
+        if XBar.debug
           puts "XBar::Mapper#reset, xbar_env=#{xbar_env}, app_env=#{app_env}"
-        #end
+        end
         initialize_shards(config)
         initialize_options(config)
         
@@ -168,20 +168,9 @@ module XBar
           @@adapters << connection_pool.spec.config
         end
         
-        threads = []
         @@proxies.each do |proxy|
-          threads << Thread.new do
-            proxy.request_reset
-          end
+          proxy.request_reset
         end
-
-        puts "Back in main"
-        sleep(1)
-        @@proxies.each do |proxy|
-          proxy.check_for_reset
-        end
-
-        threads.each(&:join)
 
         self
       end
@@ -196,9 +185,7 @@ module XBar
       end
       
       def register(proxy)
-        puts "Registering a proxy"
 	reset if shards.empty?
-
         @@proxies << proxy
         
         # If we hang on to a reference to proxies here, the proxy will

@@ -23,6 +23,9 @@ end
 
 namespace :test do
 
+  desc 'Prepare the test databases'
+  task :xprepare => ["test:drop", "test:create", "test:tables"]
+
   desc 'Create usage_statistics table'
   task :add_stats do
     require 'active_record'
@@ -331,7 +334,7 @@ namespace :db do
     end
   end
 
-  desc 'Prepare the test databases'
-  task :prepare => [:drop_databases, :build_databases, :create_tables]
+#  desc 'Prepare the test databases'
+#  task :prepare => [:drop_databases, :build_databases, :create_tables]
 end
 
