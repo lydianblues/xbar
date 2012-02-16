@@ -58,7 +58,7 @@ module XBar
       @@cached_config = nil
       @@shards = HashWithIndifferentAccess.new
       @@connections = HashWithIndifferentAccess.new
-      @@proxies = []
+      @@proxies = {}
       @@adapters = Set.new
       @@config = nil
       @@app_env = nil
@@ -168,7 +168,7 @@ module XBar
           @@adapters << connection_pool.spec.config
         end
         
-        @@proxies.each do |proxy|
+        @@proxies.values.each do |proxy|
           proxy.request_reset
         end
 
@@ -184,17 +184,18 @@ module XBar
         @@options[:verify_connection] ||= false
       end
       
+      # Register a proxy on behalf of the current thread.
       def register(proxy)
 	reset if shards.empty?
-        @@proxies << proxy
-        
-        # If we hang on to a reference to proxies here, the proxy will
-        # never be garbage collected, even when the thread that it was
-        # assigned to goes away.  Find a way to fix this. XXX
+        @@proxies[Thread.current.object_id] = proxy
+      end
 
-        # Also what if the proxy (via its shards) is holding on to checked
-        # out connections from its associated connection pools? XXX
-      
+      # Unregister the proxy for the current thread, or for the specified
+      # thread.  A thread can be specified by passing a Thread instance or
+      # its object_id.
+      def unregister(thread_spec = Thread.current)
+        thread_spec = thread_spec.object_id if thread_spec.instance_of?(Thread)
+        XBar::Mapper.proxies.delete(thread_spec)
       end
 
       def disconnect_all!
@@ -233,9 +234,15 @@ module XBar
       
       def initialize_shards(aconfig)
        
+        # The way this works right now, if the same adapter spec is used 
+        # in multiple shards, we will get multiple connection pools
+        # initialized with the same spec.  It might be better to share
+        # connection pools among the shards.
+
         @@connections.clear
         @@adapters.clear
         @@shards.clear
+        pool_for_spec = {}
         
         if aconfig
           begin
@@ -253,13 +260,20 @@ module XBar
           end
           if connection_key.kind_of? String
             spec = aconfig["connections"][connection_key]
-            pool = install_connection(connection_key, spec)
+            unless pool = pool_for_spec(spec)
+              pool = install_connection(connection_key, spec)
+              pool_for_spec[spec] = pool
+            end
             @@shards[shard_key] = [pool]
           else # an array of connection keys
             @@shards[shard_key] = []
             connection_key.each do |conn_key|
               spec = aconfig["connections"][conn_key]
-              pool = install_connection(conn_key, spec)
+              unless pool = pool_for_spec(spec)
+                pool = install_connection(conn_key, spec)
+                pool_for_spec[spec] = pool
+              end
+            end
               @@shards[shard_key] << pool
             end
           end

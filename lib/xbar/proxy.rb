@@ -26,11 +26,15 @@ class XBar::Proxy
       puts "Proxy##{ BLUE_TEXT}{initialize}#{RESET_COLORS}: Initializing new proxy."
     end
     @reset = false
+    @pause = false
     register
     reset_shards
     clean_proxy
     @adapters = XBar::Mapper.adapters
     @mylock = Mutex.new
+    @pause_lock = Mutex.new
+    @pause_cv = ConditionVariable.new
+    @paused = false
   end
 
   # Called from migration.
@@ -96,6 +100,7 @@ class XBar::Proxy
 
   def run_queries_on_shard(shard_name, use_scope = true)
     check_for_reset
+    check_for_pause
     older_shard = current_shard 
     enter_block_scope if use_scope
     self.current_shard = shard_name
@@ -127,6 +132,7 @@ class XBar::Proxy
 
   def transaction(options = {}, &block)
     check_for_reset
+    check_for_pause
     select_shard.transaction(options, &block)
   end
 
@@ -209,6 +215,31 @@ class XBar::Proxy
 
       self.current_model = saved_current_model
     end
+  end
+
+  def request_pause
+    @pause_lock.synchronize do
+      @pause = true
+    end
+  end
+
+  def paused?
+    @pause
+  end
+
+  def check_for_pause
+    if @pause && (open_transactions == 0)
+      @pause_lock.synchronize do
+        @pause = true
+        @pause_cv.wait(@pause_lock)
+        @pause = false
+      end
+   end
+  end
+
+  def unpause
+    puts "Unpausing..."
+    @pause_cv.signal
   end
 
   def request_reset

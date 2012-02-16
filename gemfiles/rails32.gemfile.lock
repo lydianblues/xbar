@@ -1,5 +1,5 @@
 PATH
-  remote: /Volumes/Opt/projects/xbar
+  remote: /opt/projects/xbar
   specs:
     xbar (0.4.1)
       activerecord
@@ -53,7 +53,7 @@ GEM
     mime-types (1.17.2)
     multi_json (1.0.4)
     mysql2 (0.3.11)
-    pg (0.12.2)
+    pg (0.13.1)
     polyglot (0.3.3)
     rack (1.4.1)
     rack-cache (1.1)
