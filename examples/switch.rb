@@ -1,4 +1,4 @@
-require_relative "helpers"
+require_relative "lib/helpers"
 
 include XBar::Example::Helpers
 
@@ -35,3 +35,8 @@ puts User.using(:canada).all.size
 puts User.using(:canada_east).all.size
 puts User.using(:canada_central).all.size
 puts User.using(:canada_west).all.size
+
+# Switch master back to server 1 for the benefit of 
+# other tests.
+puts %x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
+puts %x{ ssh _mysql@deimos repctl status }

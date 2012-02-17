@@ -4,9 +4,12 @@ include XBar::Example::Helpers
 
 # More setup, before we start up threads.
 XBar.directory = File.expand_path(File.dirname(__FILE__))
+
+puts "Using XBar config files from #{XBar.directory}/config"
+
 XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
 class User < ActiveRecord::Base; end
-# %x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
+%x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
 
 empty_users_table(:canada)
 
@@ -22,36 +25,28 @@ wait_for_pause
 puts("done")
 
 count = query_users_table(:canada)
-puts "Before pause 1: entered #{count} records in master replica of Canada shard"
-sleep 1
-count = query_users_table(:canada)
-puts "Before pause 2: entered #{count} records in master replica of Canada shard"
+puts "After pause : entered #{count} records in master replica of Canada shard"
 
-unpause
-
-join_workers
-
-cleanup_exited_threads
-
-count = query_users_table(:canada)
-puts "After join: #{count} records in master replica of Canada shard"
-
-puts "Done"
-exit 0
-
-puts %x{ ssh _mysql@deimos repctl status}
-
+print "Switching master..."
 puts %x{ ssh _mysql@deimos repctl switch_master 2 1 3 }
+print "done:"
 puts %x{ ssh _mysql@deimos repctl status }
 
+print "Switching to new XBar environment..."
 XBar::Mapper.reset(xbar_env: 'canada2', app_env: 'test')
+puts "done."
 
-do_work(5, 10, :canada)
+print "Resuming paused threads..."
+unpause
+puts "done."
 
+print "Waiting for all workers to complete..."
 join_workers
-User.using(:canada_central).all.size
+puts "done"
+
 cleanup_exited_threads
 
+count = query_users_table(:canada)
 puts %x{ ssh _mysql@deimos repctl status}
 
 puts query_users_table(:canada)
@@ -64,4 +59,3 @@ puts User.using(:canada_west).all.size
 # other tests.
 puts %x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
 puts %x{ ssh _mysql@deimos repctl status }
-

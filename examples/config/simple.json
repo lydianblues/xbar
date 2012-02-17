@@ -1,21 +1,21 @@
 {
-    "__COMMENT": "Simple SQLite French Environment",
+    "__COMMENT": "Simple SQLite Grocery Environment",
 
     "connections": {
-        "paris_m": { "adapter": "sqlite3", "database": "/tmp/paris.sqlite3"},
-	"france_1": { "adapter": "sqlite3", "database": "/tmp/france_1.sqlite3"},
-	"france_2": { "adapter": "sqlite3", "database": "/tmp/france_2.sqlite3"},
-	"france_3": { "adapter": "sqlite3", "database": "/tmp/france_3.sqlite3"}
+        "warehouse": { "adapter": "sqlite3", "database": "/tmp/warehouse.sqlite3"},
+	"produce": { "adapter": "sqlite3", "database": "/tmp/produce.sqlite3"},
+	"bakery": { "adapter": "sqlite3", "database": "/tmp/bakery.sqlite3"},
+	"deli": { "adapter": "sqlite3", "database": "/tmp/deli.sqlite3"}
     },
 
     "environments": {
         "test": {
             "shards": {
-                "master": "paris_m",
-                "france": ["france_1", "france_2", "france_3"],
-                "france_nord": "france_1",
-		"france_central": "france_2",
-                "france_sud": "france_3"
+                "master": "warehouse",
+                "store": ["produce", "bakery", "deli"],
+                "produce": "produce",
+		"bakery": "bakery",
+                "deli": "deli"
             }
         }
     }

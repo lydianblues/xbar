@@ -1,5 +1,5 @@
 class CreateUsers < ActiveRecord::Migration
-  using :france_nord, :france_central, :france_sud
+  using :produce, :bakery, :deli
   def change
     create_table :users do |t|
       t.string :name

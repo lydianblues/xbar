@@ -11,18 +11,22 @@ module Examples
   module Setup
 
     MIGRATIONS_ROOT = File.expand_path(File.join(File.dirname(__FILE__),
-      'migrations'))
+      '../migrations'))
+    
+    def self.clean
+      # This must agree with what's in the 'simple' JSON config file.  Make
+      # sure that we're starting with a clean slate.
+      %x{ rm -f /tmp/store.sqlite3 /tmp/bakery.sqlite3 \
+        /tmp/deli.sqlite3 /tmp/produce.sqlite3 }
+    end
 
     def self.start(xbar_env, app_env, version = nil)
 
-      # This must agree with what's in the 'simple' JSON config file.  Make
-      # sure that we're starting with a clean slate.
-      %x{ rm -f /tmp/paris.sqlite3 /tmp/france_1.sqlite3 \
-        /tmp/france_2.sqlite3 /tmp/france_3.sqlite3 }
+      clean
 
       # This directory should have a subdirectory called 'config' which
       # actually holds the config files.
-      XBar.directory = File.expand_path(File.dirname(__FILE__))
+      XBar.directory = File.expand_path(File.join(File.dirname(__FILE__), ".."))
 
       # Initialize the mapper with the 'test' environment from the 'simple' 
       # configuration file.
@@ -38,6 +42,9 @@ module Examples
       if version
         ActiveRecord::Migrator.run(:down, MIGRATIONS_ROOT, version)
       end
+
+      clean
+
     end
 
   end

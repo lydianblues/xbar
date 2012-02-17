@@ -1,5 +1,5 @@
 PATH
-  remote: /opt/projects/xbar
+  remote: /Volumes/Opt/projects/xbar
   specs:
     xbar (0.4.1)
       activerecord
