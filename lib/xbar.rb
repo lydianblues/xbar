@@ -13,6 +13,7 @@ require 'active_support/hash_with_indifferent_access'
 module XBar
   
   class ConfigError < StandardError; end
+  class RuntimeError < StandardError; end
   
   class << self
     attr_accessor :debug

@@ -338,7 +338,7 @@ describe XBar::Model do
   describe "when using a environment with a single adapter" do
     before (:each) do
       set_xbar_env('single_adapter', 'test')
-      @proxy = XBar::Proxy.new
+      @proxy = Thread.current[:connection_proxy] || XBar::Proxy.new
     end
        
     it 'should_clean_table_name? should return false' do
@@ -359,8 +359,9 @@ describe XBar::Model do
   end
 
   describe "when you have joins/include" do
-   
+
     before(:each) do
+      set_xbar_env('default', 'test')
       
       @client1 = Client.using(:brazil).create(:name => "Thiago")
 
@@ -379,7 +380,8 @@ describe XBar::Model do
     end
 
     it "should work with the rails 2.x syntax" do
-      items = Item.using(:canada).find(:all, :joins => :client, :conditions => { :clients => { :id => @client2.id } })
+      items = Item.using(:canada).find(:all, :joins => :client,
+        :conditions => { :clients => { :id => @client2.id } })
       items.should == [@item1, @item2]
     end
 
@@ -391,7 +393,8 @@ describe XBar::Model do
     end
 
     it "should work for include also, rails 2.x syntax" do
-      items = Item.using(:canada).find(:all, :include => :client, :conditions => { :clients => { :id => @client2.id } })
+      items = Item.using(:canada).find(:all, :include => :client,
+        :conditions => { :clients => { :id => @client2.id } })
       items.should == [@item1, @item2]
     end
 
@@ -403,13 +406,15 @@ describe XBar::Model do
     end
 
     it "should work for multiple includes, with rails 2.x syntax" do
-      parts = Part.using(:canada).find(:all, :include => {:item => :client}, :conditions => {:clients => { :id => @client2.id}})
+      parts = Part.using(:canada).find(:all, :include => {:item => :client},
+        :conditions => {:clients => { :id => @client2.id}})
       parts.should == [@part1, @part2, @part3]
       parts.first.item.client.should == @client2
     end
 
     it "should work for multiple join, with rails 2.x syntax" do
-      parts = Part.using(:canada).find(:all, :joins => {:item => :client}, :conditions => {:clients => { :id => @client2.id}})
+      parts = Part.using(:canada).find(:all, :joins => {:item => :client},
+        :conditions => {:clients => { :id => @client2.id}})
       parts.should == [@part1, @part2, @part3]
       parts.first.item.client.should == @client2
     end

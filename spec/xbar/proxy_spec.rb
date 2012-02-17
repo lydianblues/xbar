@@ -1,7 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe XBar::Proxy do
-  let(:proxy) { XBar::Proxy.new }
+  let(:proxy) { Thread.current[:connection_proxy] || XBar::Proxy.new }
   
   describe "creating a new instance" do
     before(:all) do

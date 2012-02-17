@@ -243,6 +243,7 @@ class XBar::Proxy
   end
 
   def request_reset
+    # puts "Requesting reset, thread = #{Thread.current.object_id}, proxy = #{self.object_id}"
     @mylock.synchronize do
       @reset = true
     end
@@ -254,14 +255,22 @@ class XBar::Proxy
     end
   end
 
+  def do_reset
+    #puts "Doing proxy reset, thread = #{Thread.current.object_id}, proxy = #{self.object_id}"
+    reset_shards
+    clean_proxy
+    @adapters = adapters
+    @mylock.synchronize do
+      @reset = false
+    end
+  end
+
   def check_for_reset
+#    puts "Entering check for reset, @reset = #{@reset}, " +
+#      "open_transactions = #{open_transactions}, thread = #{Thread.current.object_id}, " +
+#      "proxy = #{self.object_id}"
     if @reset && (open_transactions == 0)
-      reset_shards
-      clean_proxy
-      @adapters = adapters
-      @mylock.synchronize do
-        @reset = false
-      end
+      do_reset
     end
   end
 

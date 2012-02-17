@@ -122,6 +122,7 @@ module XBar
       # a hash in the XBar module.
       #
       def reset(options = {})
+        force = options.delete(:force)
         new_xbar_env = options[:xbar_env] || xbar_env
         if (new_xbar_env != xbar_env) || (options[:clear_cache]) ||
           (!@@cached_config.nil? && @@cached_config.empty?)
@@ -169,7 +170,11 @@ module XBar
         end
         
         @@proxies.values.each do |proxy|
-          proxy.request_reset
+          if force
+            proxy.do_reset
+          else
+            proxy.request_reset
+          end
         end
 
         self
@@ -184,9 +189,14 @@ module XBar
         @@options[:verify_connection] ||= false
       end
       
-      # Register a proxy on behalf of the current thread.
+      # Register a proxy on behalf of the current thread.  This is only
+      # called by Proxy#new.  It is up to the calling thread to assign
+      # Thread.current[:connection_proxy] = <new proxy> if it wishes.
       def register(proxy)
 	reset if shards.empty?
+        if @@proxies[Thread.current.object_id]
+          raise RuntimeError, "Mapper: already registered this proxy"
+        end
         @@proxies[Thread.current.object_id] = proxy
       end
 
@@ -202,7 +212,6 @@ module XBar
         shards.each do |name, pool_list|
           pool_list.each_with_index do |p, i|
             if p.connected?
-              puts "shard=#{name}, object_id=#{p.object_id}, connections = #{p.connections.size}"
               p.disconnect!
             end
           end
@@ -260,20 +269,19 @@ module XBar
           end
           if connection_key.kind_of? String
             spec = aconfig["connections"][connection_key]
-            unless pool = pool_for_spec(spec)
+           # unless pool = pool_for_spec[spec]
               pool = install_connection(connection_key, spec)
-              pool_for_spec[spec] = pool
-            end
+           #   pool_for_spec[spec] = pool
+           # end
             @@shards[shard_key] = [pool]
           else # an array of connection keys
             @@shards[shard_key] = []
             connection_key.each do |conn_key|
               spec = aconfig["connections"][conn_key]
-              unless pool = pool_for_spec(spec)
+              # unless pool = pool_for_spec[spec]
                 pool = install_connection(conn_key, spec)
-                pool_for_spec[spec] = pool
-              end
-            end
+              #  pool_for_spec[spec] = pool
+              # end
               @@shards[shard_key] << pool
             end
           end
