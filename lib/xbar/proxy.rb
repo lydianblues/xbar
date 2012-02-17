@@ -238,7 +238,6 @@ class XBar::Proxy
   end
 
   def unpause
-    puts "Unpausing..."
     @pause_cv.signal
   end
 
