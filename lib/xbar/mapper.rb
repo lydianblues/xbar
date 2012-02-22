@@ -60,7 +60,6 @@ module XBar
       @@connections = HashWithIndifferentAccess.new
       @@proxies = {}
       @@adapters = Set.new
-      @@config = nil
       @@app_env = nil
       @@xbar_env = nil
         

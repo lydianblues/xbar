@@ -27,15 +27,14 @@ puts("done")
 count = query_users_table(:canada)
 puts "After pause : entered #{count} records in master replica of Canada shard"
 
-print "Switching master..."
-puts %x{ ssh _mysql@deimos repctl switch_master 2 1 3 }
+print "Adding new slave replica..."
+%x{ ssh _mysql@deimos repctl add_slave 1 4 > /dev/null 2>&1}
 print "done:"
 puts %x{ ssh _mysql@deimos repctl status }
 
 print "Switching to new XBar environment..."
-XBar::Mapper.reset(xbar_env: 'canada2', app_env: 'test')
+XBar::Mapper.reset(xbar_env: 'canada3', app_env: 'test')
 puts "done."
-
 
 print "Resuming paused threads..."
 unpause
@@ -55,6 +54,7 @@ puts User.using(:canada).all.size
 puts User.using(:canada_east).all.size
 puts User.using(:canada_central).all.size
 puts User.using(:canada_west).all.size
+puts User.using(:canada_north).all.size
 
 # Switch master back to server 1 for the benefit of 
 # other tests.

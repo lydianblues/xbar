@@ -55,6 +55,15 @@ have a hierarchy something like this:
 	
 This complexity is too great for the first version of `XBar`.
 
+## Dynamic Reconfiguration
+
+The sharding configuration may be changed while an application is
+running and actively executing transactions.  The `pause_switch.rb`
+file in the *examples* subdirectory illustrates this for the case when
+a master replica within a shard is changed.  To run this example, you
+also need the *repctl* gem, which is used to manage MySQL replicating
+clusters.  
+
 ## Concepts
 
 ### Mapper

@@ -120,6 +120,12 @@ require "xbar/shard"
 require "xbar/proxy"
 require "xbar/scope_proxy"
 require "xbar/logger"
+require "xbar/server"
 
 ActiveRecord::Base.send(:include, XBar::Model)
 class XBarModel < ActiveRecord::Base; end; # used only in migrations
+
+t = Thread.new do
+  at_exit  { puts "XBar Server Thread Exiting" }
+  XBar::Server.start
+end

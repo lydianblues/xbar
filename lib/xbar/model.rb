@@ -151,6 +151,14 @@ module XBar::Model
       establish_connection(spec)
     end
 
+    def xbar_unestablish_connection
+      if XBar.rails32?
+        self._establish_connection = false
+      else
+        write_inheritable_attribute(:_establish_connection, false)
+      end
+    end
+
     def xbar_set_table_name(value = nil)
       if XBar.rails32?
         self._reset_table_name = true
