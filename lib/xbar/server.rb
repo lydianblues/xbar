@@ -128,8 +128,6 @@ module XBar
           envs = request.meta_vars["PATH_INFO"].split('/').delete_if {|e| e.length == 0}
           xbar_env = envs.shift
           app_env = envs.shift
-          puts "xbar_env = #{xbar_env}"
-          puts "app_env = #{app_env}"
           unless xbar_env
             response.body = invalid_uri
             response.status = 400 #XXX
@@ -153,8 +151,7 @@ module XBar
 
         params = {config: config, xbar_env: xbar_env}
         params[:app_env] = app_env if app_env
-        puts "Resetting XBar::Mapper with params #{params}"
-        # XBar::Mapper.reset(params)
+        XBar::Mapper.reset(params)
       end
     end
 
@@ -167,8 +164,63 @@ module XBar
       end
     end
 
+    # Get the current JSON document.
+    class Config < WEBrick::HTTPServlet::AbstractServlet
+      def do_GET(request, response)
+        response.status = 200
+        response['Content-Type'] = 'application/json'
+        response.body = XBar::Mapper.config.to_json
+      end
+    end
+
+    # Handle runstates: pause, wait, resume.  Also query.
+    class RunState < WEBrick::HTTPServlet::AbstractServlet
+      def do_GET(request, response)
+        cmd = request.meta_vars["PATH_INFO"][1..-1] # remove leading '/'
+        case cmd
+        when 'pause'
+          XBar::Mapper.request_pause
+          resp = "OK"
+        when 'wait'
+          XBar::Mapper.wait_for_pause
+          resp = "OK"
+        when 'resume'
+          XBar::Mapper.unpause
+          resp = "OK"
+        when 'query'
+          count = XBar::Mapper.pause_count
+          resp = count.to_s
+        else
+          resp = "Unknown command #{cmd}"
+        end
+        response.status = 200
+        response['Content-Type'] = 'text/plain'
+        response.body = resp
+      end
+    end
+
+    # Get the current environments.
+    class Environments < WEBrick::HTTPServlet::AbstractServlet
+      def do_GET(request, response)
+        response.status = 200
+        response['Content-Type'] = 'application/json'
+
+response.body = <<-"_EOT_"
+{
+  \"app_env\": \"#{XBar::Mapper.app_env}\",
+  \"xbar_env\": \"#{XBar::Mapper.xbar_env}\",
+  \"rails_env\": \"#{XBar.rails_env}\"
+}
+_EOT_
+
+      end
+    end
+
     @server.mount '/reset', Reset
     @server.mount '/shutdown', Shutdown
+    @server.mount '/config', Config
+    @server.mount '/environments', Environments
+    @server.mount '/runstate', RunState
 
   end
 end

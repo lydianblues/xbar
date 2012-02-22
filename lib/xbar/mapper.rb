@@ -216,6 +216,47 @@ module XBar
           end
         end
       end
+
+      # Request all proxies pause themselves.
+      def request_pause
+        XBar::Mapper.proxies.values.each do |proxy|
+          proxy.request_pause
+        end
+      end
+
+      # Wait until all proxies are paused.
+      def wait_for_pause
+        loop do
+          count = 0
+          XBar::Mapper.proxies.values.each do |proxy|
+            count += 1 if proxy.paused?
+          end
+          break if count == XBar::Mapper.proxies.size
+        end
+      end
+
+      # Unpause all proxies.
+      def unpause
+        XBar::Mapper.proxies.values.each do |proxy|
+          proxy.unpause
+        end
+      end
+
+      def pause_count
+        count = 0
+        XBar::Mapper.proxies.values.each do |proxy|
+          count += 1 if proxy.paused?
+        end
+        count
+      end
+
+      def cleanup_exited_threads
+        @threads.each do |t|
+          XBar::Mapper.unregister(t)
+        end
+        @threads = []
+        XBar::Mapper.disconnect_all!
+      end
       
       def app_env
         @@app_env = XBar.rails_env || @@app_env

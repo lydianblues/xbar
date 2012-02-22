@@ -93,6 +93,18 @@ module XBar
       yield
     end
   end
+
+  def self.start_server
+    Thread.new do
+      at_exit  { puts "XBar Server Thread Exiting" }
+      puts "Starting XBar Server"
+      XBar::Server.start
+    end
+  end
+
+  def self.stop_server
+    XBar::Server.shutdown
+  end
 end
 
 require "xbar/version"
@@ -124,9 +136,3 @@ require "xbar/server"
 
 ActiveRecord::Base.send(:include, XBar::Model)
 class XBarModel < ActiveRecord::Base; end; # used only in migrations
-
-t = Thread.new do
-  at_exit  { puts "XBar Server Thread Exiting" }
-  puts "Starting XBar Server"
-  XBar::Server.start
-end
