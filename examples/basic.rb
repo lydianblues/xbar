@@ -60,3 +60,4 @@ b1 = User.using(:bakery).all.size # 2
 d1 = User.using(:deli).all.size # 3
 
 puts [s1, s2, s3, s4, p1, b1, d1].to_s # [2, 3, 2, 3, 1, 2, 3]
+

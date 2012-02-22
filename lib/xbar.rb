@@ -127,5 +127,6 @@ class XBarModel < ActiveRecord::Base; end; # used only in migrations
 
 t = Thread.new do
   at_exit  { puts "XBar Server Thread Exiting" }
+  puts "Starting XBar Server"
   XBar::Server.start
 end
