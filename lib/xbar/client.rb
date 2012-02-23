@@ -1,6 +1,3 @@
-require 'active_support'
-require 'active_record'
-require 'xbar'
 require 'net/http'
 
 module XBar

@@ -16,9 +16,9 @@ do_work(5, 100, :canada)
 
 sleep 1
 puts "Requesting all proxies to pause"
-request_pause
+XBar::Mapper.request_pause
 print "Requests complete, waiting for pause..."
-wait_for_pause
+XBar::Mapper.wait_for_pause
 puts("done")
 
 count = query_users_table(:canada)
@@ -27,7 +27,7 @@ sleep 1
 count = query_users_table(:canada)
 puts "Before pause 2: entered #{count} records in master replica of Canada shard"
 
-unpause
+XBar::Mapper.unpause
 
 join_workers
 

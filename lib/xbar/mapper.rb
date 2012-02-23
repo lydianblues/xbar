@@ -250,12 +250,11 @@ module XBar
         count
       end
 
-      def cleanup_exited_threads
-        @threads.each do |t|
+      def cleanup_exited_threads(threads)
+        threads.each do |t|
           XBar::Mapper.unregister(t)
         end
-        @threads = []
-        XBar::Mapper.disconnect_all!
+        disconnect_all!
       end
       
       def app_env

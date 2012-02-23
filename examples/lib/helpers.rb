@@ -25,6 +25,11 @@ module XBar
         @threads.each(&:join)
       end
 
+      def cleanup_exited_threads
+        XBar::Mapper.cleanup_exited_threads(@threads)
+        @threads = []
+      end
+
       def shard_master_config(shard)
         XBar::Mapper.shards[shard][0].spec.config
       end

@@ -14,7 +14,10 @@ module XBar
   
   class ConfigError < StandardError; end
   class RuntimeError < StandardError; end
-  
+
+  @server_mutex = Mutex.new
+  @server_running = false
+
   class << self
     attr_accessor :debug
   end
@@ -94,16 +97,36 @@ module XBar
     end
   end
 
+  def self.logger
+    @logger ||= Logger.new('/tmp/xbar-logger', shift_age = 7,
+      shift_size = 1048576)
+  end
+
   def self.start_server
-    Thread.new do
-      at_exit  { puts "XBar Server Thread Exiting" }
-      puts "Starting XBar Server"
-      XBar::Server.start
+    @server_mutex.synchronize do
+      puts "XBar server already running" if @server_running
+      unless @server_running
+        Thread.new do
+          @server_running = true
+          at_exit do 
+            puts "XBar server exiting."
+            @server_mutex.synchronize { @server_running = false }
+          end
+          puts "XBar server starting."
+          XBar::Server.start
+        end
+      end
     end
   end
 
   def self.stop_server
-    XBar::Server.shutdown
+    @server_mutex.synchronize do
+      if @server_running
+        puts "XBar server stopping."
+        XBar::Server.shutdown
+        @server_running = false
+      end
+    end
   end
 end
 
@@ -136,3 +159,5 @@ require "xbar/server"
 
 ActiveRecord::Base.send(:include, XBar::Model)
 class XBarModel < ActiveRecord::Base; end; # used only in migrations
+
+XBar.start_server

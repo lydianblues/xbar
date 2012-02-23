@@ -15,6 +15,9 @@ task :default => :spec
 #   config.churn   = { :start_date => "1 year ago", :minimum_churn_count => 10 }
 # end
 
+RSpec::Core::RakeTask.new(:spec) do |spec|
+end
+
 RSpec::Core::RakeTask.new(:rcov) do |spec|
 end
 

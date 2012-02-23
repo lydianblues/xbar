@@ -23,33 +23,47 @@ module XBar
     PRIVATE_KEY = File.join(CERTDIR, "xbar.key")
     PORT = 7250
 
-    cert = OpenSSL::X509::Certificate.new File.read CERTIFICATE
-    pkey = OpenSSL::PKey::RSA.new File.read PRIVATE_KEY
-
-    log = File.open('/tmp/xbar-access-log', 'a')
-    access_log = [
-      [log, WEBrick::AccessLog::COMMON_LOG_FORMAT],
-      [log, WEBrick::AccessLog::REFERER_LOG_FORMAT],
-    ]
-    @logger = Logger.new('/tmp/xbar-logger', shift_age = 7, shift_size = 1048576)
-
-    @server = WEBrick::HTTPServer.new(Port: PORT,
-                                      AccessLog: access_log,
-                                      Logger: @logger,
-                                      SSLEnable: true,
-                                      SSLCertificate: cert,
-                                      SSLPrivateKey: pkey)
-    # Use this instead for NO SECURITY.
-    # server = WEBrick::HTTPServer.new(Port: PORT)
-
     def self.start
-      @logger.info "Starting XBar Server"
+      cert = OpenSSL::X509::Certificate.new File.read CERTIFICATE
+      pkey = OpenSSL::PKey::RSA.new File.read PRIVATE_KEY
+
+      @log = File.open('/tmp/xbar-access-log', 'a')
+      @logger ||= Logger.new('/tmp/xbar-logger', shift_age = 7,
+        shift_size = 1048576)
+
+      access_log = [
+        [@log, WEBrick::AccessLog::COMMON_LOG_FORMAT],
+        [@log, WEBrick::AccessLog::REFERER_LOG_FORMAT],
+      ]
+      @server = WEBrick::HTTPServer.new(Port: PORT,
+        AccessLog: access_log, Logger: @logger, SSLEnable: true,
+        SSLCertificate: cert, SSLPrivateKey: pkey)
+
+      @logger.info "Starting XBar Server."
+      @server.mount '/reset', Reset
+      @server.mount '/config', Config
+      @server.mount '/environments', Environments
+      @server.mount '/runstate', RunState
       @server.start
+      XBar.logger.info "XBar start returned."
+    end
+
+    def self.wait_until_ready(timeout = 10)
+      retries = 2 * timeout
+      retries.times do
+        break if @server
+        sleep 0.5
+      end 
+      return !!@server
     end
 
     def self.shutdown
-      @logger.info "Shutting down XBar Server"
-      @server.shutdown
+      @logger.info "Shutting down XBar Server."
+      if wait_until_ready
+        @server.shutdown
+        @log.close
+        @server = nil # for garbage collector
+      end
     end
 
     class Reset < WEBrick::HTTPServlet::AbstractServlet
@@ -155,15 +169,6 @@ module XBar
       end
     end
 
-    class Shutdown < WEBrick::HTTPServlet::AbstractServlet
-      def do_POST(request, response)
-        response.status = 200
-        response['Content-Type'] = 'text/plain'
-        response.body = 'Shutting down'
-        XBar::Server.shutdown
-      end
-    end
-
     # Get the current JSON document.
     class Config < WEBrick::HTTPServlet::AbstractServlet
       def do_GET(request, response)
@@ -215,12 +220,6 @@ _EOT_
 
       end
     end
-
-    @server.mount '/reset', Reset
-    @server.mount '/shutdown', Shutdown
-    @server.mount '/config', Config
-    @server.mount '/environments', Environments
-    @server.mount '/runstate', RunState
 
   end
 end

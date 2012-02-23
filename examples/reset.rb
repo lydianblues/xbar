@@ -1,9 +1,13 @@
+require 'active_support'
+require 'active_record'
+require 'xbar' 
 require 'xbar/client'
-require 'json'
 
 include XBar::Client
 
-XBar.start_server
+#XBar.stop_server
+#XBar.start_server
+#XBar::Server.wait_until_ready
 
 file = "./config/canada.json"
 
@@ -32,7 +36,8 @@ puts "Do we get back the same JSON we put in? #{input == output}"
 
 response = environments("localhost", 7250)
 envs = JSON.parse(response.body)
-puts "app_env = #{envs['app_env']}, xbar_env = #{envs['xbar_env']}, rails_env = #{envs['rails_env']}"
+puts "app_env = <#{envs['app_env']}>, xbar_env = <#{envs['xbar_env']}>, " +
+  "rails_env = <#{envs['rails_env']}>"
 
 response = runstate("localhost", 7250, :cmd => 'query')
 puts response.body
@@ -51,7 +56,3 @@ response = runstate("localhost", 7250, :cmd => 'resume')
 puts response.body
 response = runstate("localhost", 7250, :cmd => 'query')
 puts response.body
-
-
-
-XBar.stop_server
