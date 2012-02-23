@@ -5,9 +5,9 @@ require 'xbar/client'
 
 include XBar::Client
 
-#XBar.stop_server
-#XBar.start_server
-#XBar::Server.wait_until_ready
+XBar.stop_server
+XBar.start_server
+XBar::Server.wait_until_ready
 
 file = "./config/canada.json"
 
