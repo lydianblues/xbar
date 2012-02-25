@@ -1,6 +1,6 @@
-require_relative "lib/helpers"
+require_relative "lib/server_helpers"
 
-include XBar::Example::Helpers
+include XBar::ServerHelpers
 
 # More setup, before we start up threads.
 XBar.directory = File.expand_path(File.dirname(__FILE__))
@@ -19,9 +19,9 @@ do_work(5, 100, :canada)
 
 sleep 1
 puts "Requesting all proxies to pause"
-request_pause
+XBar::Mapper.request_pause
 print "Requests complete, waiting for pause..."
-wait_for_pause
+XBar::Mapper.wait_for_pause
 puts("done")
 
 count = query_users_table(:canada)
@@ -37,14 +37,14 @@ XBar::Mapper.reset(xbar_env: 'canada3', app_env: 'test')
 puts "done."
 
 print "Resuming paused threads..."
-unpause
+XBar::Mapper.unpause
 puts "done."
 
 print "Waiting for all workers to complete..."
 join_workers
 puts "done"
 
-cleanup_exited_threads
+XBar::Mapper.cleanup_exited_threads
 
 count = query_users_table(:canada)
 puts %x{ ssh _mysql@deimos repctl status}

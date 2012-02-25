@@ -46,7 +46,8 @@ module XBar
     
     def self.exports
       # omit master_config
-      %w(connections shards adapters options app_env proxies).map(&:to_sym)
+      %w(connections shards adapters options
+        app_env proxies runstate).map(&:to_sym)
     end
     
     module ClassMethods
@@ -62,6 +63,7 @@ module XBar
       @@adapters = Set.new
       @@app_env = nil
       @@xbar_env = nil
+      @@runstate = :running
         
       def config_file_name
         file = "#{xbar_env}.json"
@@ -219,6 +221,7 @@ module XBar
 
       # Request all proxies pause themselves.
       def request_pause
+        @@runstate = :pause_wait
         XBar::Mapper.proxies.values.each do |proxy|
           proxy.request_pause
         end
@@ -233,6 +236,7 @@ module XBar
           end
           break if count == XBar::Mapper.proxies.size
         end
+        @@runstate = :paused
       end
 
       # Unpause all proxies.
@@ -240,6 +244,7 @@ module XBar
         XBar::Mapper.proxies.values.each do |proxy|
           proxy.unpause
         end
+        @@runstate = :running
       end
 
       def pause_count

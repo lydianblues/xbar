@@ -1,6 +1,6 @@
-require_relative "lib/helpers"
+require_relative "lib/server_helpers"
 
-include XBar::Example::Helpers
+include XBar::ServerHelpers
 
 # More setup, before we start up threads.
 XBar.directory = File.expand_path(File.dirname(__FILE__))

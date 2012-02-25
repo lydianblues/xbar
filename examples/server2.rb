@@ -1,7 +1,11 @@
-
-require_relative "lib/helpers"
-
-include XBar::Example::Helpers
+# This file requires 'xbar' so it is executed in the context of the XBar server.
+# This allows us to call XBar::Mapper methods directly.  Thus the commands to
+# pause the server, reset the mapper, etc. are all inline in one file.
+#
+# XXX How is this file different than 'pause_switch'?
+#
+require_relative "lib/server_helpers"
+include XBar::ServerHelpers
 
 # More setup, before we start up threads.
 XBar.directory = File.expand_path(File.dirname(__FILE__))
@@ -11,11 +15,11 @@ puts "Using XBar config files from #{XBar.directory}/config"
 XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
 class User < ActiveRecord::Base; end
 
-# %x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
+%x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
 
 empty_users_table(:canada)
 
-# puts %x{ ssh _mysql@deimos repctl status}
+puts %x{ ssh _mysql@deimos repctl status}
 
 do_work(5, 100, :canada)
 

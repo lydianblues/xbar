@@ -194,7 +194,7 @@ module XBar
           resp = "OK"
         when 'query'
           count = XBar::Mapper.pause_count
-          resp = count.to_s
+          resp = Mapper.runstate.to_s
         else
           resp = "Unknown command #{cmd}"
         end
