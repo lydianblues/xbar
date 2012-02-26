@@ -1,19 +1,19 @@
 GIT
   remote: https://github.com/rails/arel.git
-  revision: fc787a42c0febcee41e13d16e06b72492ab00468
+  revision: b757de114cf79d0bab14b086f4ccc7480b9421d8
   specs:
-    arel (3.0.0.20120112113618)
+    arel (3.0.2.20120221150532)
 
 GIT
   remote: https://github.com/rails/journey.git
-  revision: 7059e60070861a9c364a50954ee4abb355cc4541
+  revision: 1b661c679e4cce5b4880b0a6650ed01a16a5a8cf
   specs:
-    journey (1.0.1.20120126102309)
+    journey (1.0.1.20120208102204)
 
 PATH
   remote: /Volumes/Opt/projects/xbar
   specs:
-    xbar (0.4.0)
+    xbar (0.4.2)
       activerecord
       mysql2
 
@@ -40,13 +40,13 @@ PATH
       activemodel (= 4.0.0.beta)
       activesupport (= 4.0.0.beta)
       arel (~> 3.0.0)
-      tzinfo (~> 0.3.29)
     activeresource (4.0.0.beta)
       activemodel (= 4.0.0.beta)
       activesupport (= 4.0.0.beta)
     activesupport (4.0.0.beta)
       i18n (~> 0.6)
       multi_json (~> 1.0)
+      tzinfo (~> 0.3.31)
     rails (4.0.0.beta)
       actionmailer (= 4.0.0.beta)
       actionpack (= 4.0.0.beta)
@@ -66,23 +66,27 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
-    appraisal (0.4.0)
+    appraisal (0.4.1)
       bundler
       rake
+    archive-tar-minitar (0.5.2)
     builder (3.0.0)
+    columnize (0.3.6)
     diff-lcs (1.1.3)
     erubis (2.7.0)
     hike (1.2.1)
     i18n (0.6.0)
     json (1.6.5)
+    linecache19 (0.5.13)
+      ruby_core_source (>= 0.1.4)
     mail (2.4.1)
       i18n (>= 0.4.0)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
     mime-types (1.17.2)
-    multi_json (1.0.4)
+    multi_json (1.1.0)
     mysql2 (0.3.11)
-    pg (0.12.2)
+    pg (0.13.2)
     polyglot (0.3.3)
     rack (1.4.1)
     rack-cache (1.1)
@@ -102,6 +106,16 @@ GEM
     rspec-expectations (2.8.0)
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.8.0)
+    ruby-debug-base19 (0.11.26)
+      columnize (>= 0.3.1)
+      linecache19 (>= 0.5.11)
+      ruby_core_source (>= 0.1.4)
+    ruby-debug19 (0.11.6)
+      columnize (>= 0.3.1)
+      linecache19 (>= 0.5.11)
+      ruby-debug-base19 (>= 0.11.19)
+    ruby_core_source (0.1.5)
+      archive-tar-minitar (>= 0.5.2)
     sprockets (2.2.0)
       hike (~> 1.2)
       multi_json (~> 1.0)
@@ -129,6 +143,7 @@ DEPENDENCIES
   rails!
   rake
   rspec (= 2.8.0)
+  ruby-debug19
   sqlite3
   syntax
   xbar!

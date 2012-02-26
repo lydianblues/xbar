@@ -38,14 +38,18 @@ GEM
     appraisal (0.4.1)
       bundler
       rake
-    arel (3.0.0)
+    archive-tar-minitar (0.5.2)
+    arel (3.0.2)
     builder (3.0.0)
+    columnize (0.3.6)
     diff-lcs (1.1.3)
     erubis (2.7.0)
     hike (1.2.1)
     i18n (0.6.0)
-    journey (1.0.2)
+    journey (1.0.3)
     json (1.6.5)
+    linecache19 (0.5.13)
+      ruby_core_source (>= 0.1.4)
     mail (2.4.1)
       i18n (>= 0.4.0)
       mime-types (~> 1.16)
@@ -53,7 +57,7 @@ GEM
     mime-types (1.17.2)
     multi_json (1.1.0)
     mysql2 (0.3.11)
-    pg (0.13.1)
+    pg (0.13.2)
     polyglot (0.3.3)
     rack (1.4.1)
     rack-cache (1.1)
@@ -88,6 +92,16 @@ GEM
     rspec-expectations (2.8.0)
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.8.0)
+    ruby-debug-base19 (0.11.26)
+      columnize (>= 0.3.1)
+      linecache19 (>= 0.5.11)
+      ruby_core_source (>= 0.1.4)
+    ruby-debug19 (0.11.6)
+      columnize (>= 0.3.1)
+      linecache19 (>= 0.5.11)
+      ruby-debug-base19 (>= 0.11.19)
+    ruby_core_source (0.1.5)
+      archive-tar-minitar (>= 0.5.2)
     sprockets (2.1.2)
       hike (~> 1.2)
       rack (~> 1.0)
@@ -112,6 +126,7 @@ DEPENDENCIES
   rails (= 3.2.1)
   rake
   rspec (= 2.8.0)
+  ruby-debug19
   sqlite3
   syntax
   xbar!

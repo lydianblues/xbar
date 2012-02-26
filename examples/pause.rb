@@ -1,4 +1,10 @@
+require 'active_support'
+require 'active_record'
+require 'xbar'
 require_relative "lib/server_helpers"
+
+# Demonstrate the use of pause/unpause/wait_for_pause while five
+# threads are simultaneosly doing I/O.
 
 include XBar::ServerHelpers
 

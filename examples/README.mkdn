@@ -1,0 +1,61 @@
+## Overview
+
+Each example is either a *server* example or a *client* example.  A
+server example executes
+
+	require 'xbar'
+	require_relative 'lib/server_helpers'
+	include XBar::ServerHelpers
+	
+while a client example executes
+
+	require 'xbar/client'
+	require_relative 'lib/client_helpers'
+	include XBar::ClientHelpers
+
+By requiring the `xbar` gem, a Ruby program starts up the XBar management
+server in its own interpreter instance.  Thus it can access XBar
+internals (and server internals) directly.  For example to get the
+current configuration file, it can do 
+
+	XBar.config
+	
+On the other hand, a client example can not access XBar internals.  It
+can only access the XBar management server via JSON over HTTPS as
+defined in the `xbar/client` file.  A client can get the current
+config file simple by calling the `config` method which handles
+everything to do with the JSON over HTTPS communication.
+
+Some examples run as a client, but they also spawn a server that they
+will manage.
+
+## Repctl Gem
+
+Some examples use a complicated setup and require the use of the
+`repctl` gem on a separate server machine.  This gem is used to manage
+the MySQL servers on the server machine.  It can do things like set up
+a MySQL replicating cluster with a single command, switch the
+replication master, add/remove slaves, and query replication status.
+
+Such changes to the MySQL environment must be coordinated with
+reconfiguring XBar.  For example, to change the MySQL master, the
+following sequence of steps is used:
+
+* request XBar to pause via client API
+* wait for all threads (one per XBar proxy) to pause, via client API
+* use `repctl` to switch MySQL master
+* unpause all threads
+
+Currently, the `repctl` command is run on the server machine via
+SSH. Thus you must configure SSH credentials so that the user running
+the examples can invoke `repctl` on the server.
+
+## How to Run the Examples
+Set your environment variable BUNDLE_GEMFILE to one of the
+gemfiles in ../gemfiles, then do
+
+'bundle exec ruby <file>'
+
+where file is 'basic.rb' or 'multithread.rb', etc.
+
+Comments at the start of each example describe what the example does.

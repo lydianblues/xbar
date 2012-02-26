@@ -2,6 +2,7 @@ module XBar
   module ClientHelpers
 
     require 'mysql2'
+    require 'json'
 
     def connection_url_to_hash(url) # :nodoc:
       config = URI.parse url
@@ -26,27 +27,43 @@ module XBar
       spec
     end
 
-    def mysql_client_for(config, app_env, shard, replica_index)
-      key_list = config['environments'][app_env]['shards'][shard]
+    def adapter_config(config, app_env, shard, replica_index)
+      if config.kind_of? String
+        config = JSON.parse(config)
+      end
+      key_list = config['environments'][app_env.to_s]['shards'][shard.to_s]
       if key_list.kind_of?(Array)
         key = key_list[replica_index]
       else
         key = key_list
       end
-      url = config['connections'][key]
-      spec = connection_url_to_hash(url)
-      if spec[:adapter] == "mysql2"
-        dbclient = Mysql2::Client.new(spec)
+      aconfig = config['connections'][key]
+      if aconfig.kind_of?(Hash)
+        aconfig
+      else
+        connection_url_to_hash(aconfig)
+      end
+    end
+
+    def mysql_client_for(config, app_env, shard, replica_index)
+      aconfig = adapter_config(config, app_env, shard, replica_index)
+      if aconfig[:adapter] == "mysql2"
+        Mysql2::Client.new(aconfig)
       else
         nil
       end
     end
 
-=begin
-    dbclient = mysql_client_for(output, 'test', 'canada', 0)
-    results = dbclient.query("SELECT COUNT(*) AS count FROM users")
-    puts "Users table has #{results.first['count']} rows."
-=end
+    def query_users_table(config, app_env, shard, replica_index)
+      client = mysql_client_for(config, app_env, shard, replica_index)
+      results = client.query("SELECT COUNT(*) AS count FROM users")
+      results.first["count"]
+    end
+
+    def clear_users_table(config, app_env, shard, replica_index)
+      client = mysql_client_for(config, app_env, shard, replica_index)
+      results = client.query("DELETE FROM users")
+    end
 
     def wait_for_server(host, port)
       print "Waiting for server."

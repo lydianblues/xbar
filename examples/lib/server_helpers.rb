@@ -55,5 +55,21 @@ module XBar
         results.first["count"]
       end
     end
+
+    def adapter_config(shard, replica_index)
+      pool_list = XBar::Mapper.shards[shard]
+      pool = pool_list[replica_index]
+      pool.spec.config
+    end
+
+    def mysql_client_for(shard, replica_index)
+      aconfig = adapter_config(shard, replica_index)
+      if aconfig[:adapter] == "mysql2"
+        Mysql2::Client.new(aconfig)
+      else
+        nil
+      end
+    end
+
   end
 end

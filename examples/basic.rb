@@ -1,10 +1,21 @@
 require 'active_support'
 require 'active_record'
 require 'xbar'
+require_relative 'lib/server_helpers'
+include XBar::ServerHelpers
 
-# This file demonstrates a self-contained use of XBar.  The only support is a
-# subdirectory 'config' that holds a JSON configuration file, and a subdirectory
-# 'migrations' that holds the one migration that we plan to use.
+#
+# This file demonstrates a number of XBar features, including
+#  -- 'reset' to install a shard/mirror configuration
+#  -- ActiveRecord migration support
+#  -- 'xbar_establish_connection' and 'xbar_unestablish_connection'
+#  -- 'using' invoked on the XBar model with a block
+#  -- 'using' and 'using_any' invoked on an ActiveRecord model instance
+#  -- direct execution of SQL statements.
+#
+# Sqlite3 is used for the database, so no database configuration is
+# required.
+#
 
 # This must agree with what's in the 'simple' JSON config file.  Make sure that
 # we're starting with a clean slate.
@@ -32,8 +43,8 @@ if use_migrations
 else
   # Alternatively, use SQL to create the initial tables.
   [:deli, :bakery, :produce].each do |shard|
-    config = XBar::Mapper.shards[shard].first.spec.config
-    User.xbar_establish_connection(config)
+    aconfig = adapter_config(shard, 0)
+    User.xbar_establish_connection(aconfig)
     User.connection.execute('CREATE TABLE users (name STRING)')
     User.xbar_unestablish_connection
   end

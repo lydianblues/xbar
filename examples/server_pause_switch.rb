@@ -1,6 +1,11 @@
-require_relative "lib/server_helpers"
+require 'active_support'
+require 'active_record'
+require 'xbar'
+require_relative 'lib/server_helpers'
 
 include XBar::ServerHelpers
+
+# While I/O is going on, pause threads and switch the MySQL master.
 
 # More setup, before we start up threads.
 XBar.directory = File.expand_path(File.dirname(__FILE__))

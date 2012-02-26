@@ -1,4 +1,11 @@
+require 'active_support'
+require 'active_record'
+require 'xbar'
 require_relative "lib/server_helpers"
+
+# Start some threads, let them do a lot of I/O, wait for them
+# to finish.  The switch master and repeat.  No pause/unpause
+# is involved.
 
 include XBar::ServerHelpers
 
