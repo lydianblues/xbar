@@ -1,0 +1,17 @@
+{
+    "connections": {
+        "russia_1": "postgres://postgres@127.0.0.1/russia_1",      
+        "russia_2": "postgres://postgres@127.0.0.1/russia_2",      
+        "russia_3": "postgres://postgres@127.0.0.1/russia_3"
+    },
+    "environments": {
+        "test": {
+            "shards": {
+	        "russia": ["russia_1", "russia_2", "russia_3"],
+                "russia_east": "russia_1",
+                "russia_central": "russia_2",
+                "russia_west": "russia_3"
+            }
+        }
+    }
+}

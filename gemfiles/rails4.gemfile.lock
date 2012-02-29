@@ -39,7 +39,7 @@ PATH
     activerecord (4.0.0.beta)
       activemodel (= 4.0.0.beta)
       activesupport (= 4.0.0.beta)
-      arel (~> 3.0.0)
+      arel (~> 3.0.2)
     activeresource (4.0.0.beta)
       activemodel (= 4.0.0.beta)
       activesupport (= 4.0.0.beta)

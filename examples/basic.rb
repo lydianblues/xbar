@@ -30,17 +30,23 @@ XBar::Mapper.reset(xbar_env: 'simple', app_env: 'test')
 
 # Define the model to let us access the 'users' table through ActiveRecord.
 class User < ActiveRecord::Base; end
+#
+# Here are a three methods to create the inital tables.  You can use a migration,
+# you can use plain SQL with 'establish_connection', or you can call 'create_table'
+# on the connection. Choose only one.  The first is preferable because it updates
+# the schema_migrations table.
+#
+method = :migrations
+#method = :establish_connection
+#method = :create_table_on_connection
 
-# Here are a couple methods to create the inital tables.  You can use a migration,
-# or you can use plain SQL.  Choose one method or the other.
-use_migrations = true
-
-if use_migrations
+case method
+when :migrations
   # Use a migration to create initial table(s) to work with.
   MIGRATIONS_ROOT = File.expand_path(File.join(File.dirname(__FILE__), 'migrations'))
   version = 1
   ActiveRecord::Migrator.run(:up, MIGRATIONS_ROOT, version)
-else
+when :establish_connection
   # Alternatively, use SQL to create the initial tables.
   [:deli, :bakery, :produce].each do |shard|
     aconfig = adapter_config(shard, 0)
@@ -48,6 +54,15 @@ else
     User.connection.execute('CREATE TABLE users (name STRING)')
     User.xbar_unestablish_connection
   end
+when :create_table_on_connection
+  [:deli, :bakery, :produce].each do |shard|
+    User.using(shard).connection.create_table(:users) do |t|
+      t.string :name
+    end
+  end
+else
+  puts "Choose a method to create tables."
+  exit 1
 end
 
 # Everything is now set up. Remember that the three 'store' shards don't really

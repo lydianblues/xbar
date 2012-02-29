@@ -145,8 +145,12 @@ class XBar::Proxy
   end
 
   def clear_cache!
-    check_for_reset    
-    select_shard.run_queries(:clear_cache!)
+    shards.values.each do |shard|
+      pool = shard[0]
+      pool.with_connection do |conn|
+        conn.clear_cache!
+      end
+    end
   end
   
   def method_missing(method, *args, &block)

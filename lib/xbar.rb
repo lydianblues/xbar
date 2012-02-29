@@ -137,6 +137,7 @@ require "xbar/migration"
 require "xbar/association_collection"
 require "xbar/has_and_belongs_to_many_association"
 require "xbar/association"
+require "xbar/relation"
 
 if XBar.rails3?
   require "xbar/rails3/association"

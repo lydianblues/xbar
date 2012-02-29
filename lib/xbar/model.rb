@@ -111,19 +111,18 @@ module XBar::Model
       end
     end
     
-    def using(shard_name)
-      return self if defined?(::Rails) && !XBar.environments.include?(Rails.env.to_s)
+    def using(shard_name, opts = {})
+      if defined?(::Rails) && !XBar.environments.include?(Rails.env.to_s)
+        return self
+      end
       clean_table_name
-      return XBar::ScopeProxy.new(shard_name, self)
+      puts "XBar::Model#using" if XBar.debug
+      return XBar::ScopeProxy.new(shard_name, self, opts)
     end
 
     def using_any(shard_name = nil)
-      connection_proxy.slave_read_allowed = true
-      if shard_name
-        using(shard_name)
-      else
-        self
-      end
+      shard_name ||= self.connection.current_shard
+      using(shard_name, slave_read_allowed: true)
     end
 
     def unreplicated_model

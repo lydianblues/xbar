@@ -17,7 +17,6 @@ class Client < ActiveRecord::Base
 end
 
 class Cat < ActiveRecord::Base
-  using :china
 end
 
 #This class sets its own connection
