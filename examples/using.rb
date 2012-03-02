@@ -126,7 +126,7 @@ XBar.using(:russia_west) do
   puts Item.low_client_id.count # 1
 end
 
-# You can be perverse if you want to.  The 'using' in the chains
+# You can mix and match if you want to.  The 'using' in the chains
 # overrides the block level.
 XBar.using(:russia_west) do
   puts Item.low_client_id.count # 1

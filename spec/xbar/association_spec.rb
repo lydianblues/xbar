@@ -8,8 +8,10 @@ describe XBar::Association do
     before(:each) do   
       @computer_brazil = Computer.using(:brazil).create!(:name => "Computer Brazil")
       @computer_master = Computer.create!(:name => "Computer Brazil")
-      @keyboard_brazil = Keyboard.using(:brazil).create!(:name => "Keyboard Brazil", :computer => @computer_brazil)
-      @keyboard_master = Keyboard.create!(:name => "Keyboard Master", :computer => @computer_master)
+      @keyboard_brazil = Keyboard.using(:brazil).create!(:name => "Keyboard Brazil",
+        :computer => @computer_brazil)
+      @keyboard_master = Keyboard.create!(:name => "Keyboard Master",
+        :computer => @computer_master)
     end
 
     it "should find the models" do
@@ -34,7 +36,7 @@ describe XBar::Association do
       c = Computer.using(:brazil).create!(:name => "Computer Brazil")
       k = c.build_keyboard(:name => "Building keyboard")
       # c.save
-      #k.save
+      # k.save
       c.keyboard.should == k
       k.computer_id.should == c.id
       k.computer.should == c
@@ -379,7 +381,7 @@ describe XBar::Association do
 
     it "should find all models in the specified shard" do
       @brazil_client.item_ids.should == [@item_brazil.id]
-      @brazil_client.items().should == [@item_brazil]
+      @brazil_client.items.should == [@item_brazil]
     end
 
     it "should finds the client that the item belongs" do
@@ -396,19 +398,19 @@ describe XBar::Association do
       new_brazil_client = Client.using(:brazil).create!(:name => "new Client")
       @item_brazil.client = new_brazil_client
       @item_brazil.client.should == new_brazil_client
-      @item_brazil.save()
+      @item_brazil.save
       @item_brazil.reload
       @item_brazil.client_id.should == new_brazil_client.id
-      @item_brazil.client().should == new_brazil_client
+      @item_brazil.client.should == new_brazil_client
     end
 
     it "should works for build method" do
       item2 = Item.using(:brazil).create!(:name => "Brazil Item")
       c = item2.create_client(:name => "new Client")
-      c.save()
-      item2.save()
+      c.save
+      item2.save
       item2.client.should == c
-      c.items().should == [item2]
+      c.items.should == [item2]
     end
 
     describe "it should works when using" do
@@ -416,7 +418,6 @@ describe XBar::Association do
         @item_brazil_2 = Item.using(:brazil).create!(:name => "Brazil Item 2")
         @brazil_client.items.to_set.should == [@item_brazil].to_set
       end
-
 
       it "update_attributes" do
         @brazil_client.update_attributes(:item_ids => [@item_brazil_2.id, @item_brazil.id])

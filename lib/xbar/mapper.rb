@@ -331,14 +331,19 @@ module XBar
           end
         end
       end
-      
+
       # Should return a ConnectionPool.
       def install_connection(conn_key, spec)
         unless spec
           raise XBar::ConfigError, "No connection for key #{conn_key}"
         end
-        if defined? ActiveRecord::Base::ConnectionSpecification::Resolver
-          resolver = ActiveRecord::Base::ConnectionSpecification::Resolver.new(spec, {})
+        resolver = nil
+        if defined? ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver
+          resolver =  ActiveRecord::ConnectionAdapters::ConnectionSpecification::Resolver.new(spec, {})
+        elsif defined? ActiveRecord::Base::ConnectionSpecification::Resolver
+          resolver =  ActiveRecord::Base::ConnectionSpecification::Resolver.new(spec, {})
+        end
+        if resolver
           spec = resolver.spec
           @@adapters << spec.config[:adapter]
           @@connections[conn_key.to_sym] = 

@@ -1,7 +1,8 @@
 # XBar  - MongoDB Style Sharding for ActiveRecord
 
 ## Supported versions
-*Caution* -- only ActiveRecord 3.2 is currently supported.  This 
+*Caution* -- only ActiveRecord 3.2.2 and ActiveRecord 4.0.0.beta (commit
+447d87c206ff70046b15be99e73ec79690687bb9) is currently supported.  This 
 will soon be improved.
 
 ## General Design

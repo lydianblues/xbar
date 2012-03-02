@@ -17,7 +17,7 @@ module XBar::Migration
         announce_without_xbar("#{message} - #{get_current_shard}")
       end
       alias_method_chain :migrate, :xbar
-      alias_method_chain :announce, :xbar
+      # alias_method_chain :announce, :xbar
       attr_accessor :current_shard
     end
     base.extend(ClassMethods)
@@ -69,7 +69,7 @@ module XBar::Migration
 
 end
 
-if XBar.rails31?
+if XBar.rails31? || XBar.rails4?
   ActiveRecord::Migration.send :include, XBar::Migration
 else
   ActiveRecord::Migration.extend(XBar::Migration)

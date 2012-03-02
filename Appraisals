@@ -1,21 +1,13 @@
-# appraise "rails2" do
-#  gem 'activerecord', '~> 2.3'
-#  gem 'actionpack', '~> 2.3'
-# end
-
 appraise "rails3" do
-  gem 'activerecord', '~> 3.0.11'
-  gem 'actionpack', '~> 3.0.11'
+  gem 'rails', :path => '/opt/rails/rails-3.0'
 end
 
 appraise "rails31" do
-  gem 'activerecord', '~> 3.1.1'
-  gem 'actionpack', '~> 3.1.1'
+  gem 'rails', :path => '/opt/rails/rails-3.1'
 end
 
-
 appraise "rails32" do
-  gem 'rails', '3.2.1'
+  gem 'rails', :path => '/opt/rails/rails-3.2'
 end
 
 appraise "rails4" do

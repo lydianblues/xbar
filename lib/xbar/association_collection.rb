@@ -1,7 +1,7 @@
 module XBar::AssociationCollection
 
   def self.included(base)
-    if XBar.rails31?
+    if XBar.rails31? || XBar.rails4?
       base.instance_eval do
         alias_method_chain :reader, :xbar
         alias_method_chain :writer, :xbar
@@ -62,7 +62,7 @@ module XBar::AssociationCollection
   end
 end
 
-if XBar.rails31?
+if XBar.rails31? || XBar.rails4?
   ActiveRecord::Associations::CollectionAssociation.send(:include, XBar::AssociationCollection)
 else
   ActiveRecord::Associations::AssociationCollection.send(:include, XBar::AssociationCollection)

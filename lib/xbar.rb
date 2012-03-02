@@ -80,6 +80,10 @@ module XBar
     ActiveRecord::VERSION::MAJOR == 3 && ActiveRecord::VERSION::MINOR >= 2
   end
 
+  def self.rails4?
+    ActiveRecord::VERSION::MAJOR == 4
+  end
+
   def self.rails?
     defined?(Rails)
   end
@@ -139,7 +143,7 @@ require "xbar/has_and_belongs_to_many_association"
 require "xbar/association"
 require "xbar/relation"
 
-if XBar.rails3?
+if XBar.rails3? || XBar.rails4?
   require "xbar/rails3/association"
   require "xbar/rails3/persistence"
   require "xbar/rails3/arel"
@@ -148,7 +152,7 @@ else
   require "xbar/rails2/persistence"
 end
 
-if XBar.rails31?
+if XBar.rails31? || XBar.rails4?
   require "xbar/rails3.1/singular_association"
 end
 

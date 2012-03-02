@@ -7,7 +7,7 @@ module XBar::Model
   included do   
     attr_accessor :current_shard
     before_save :reload_connection
-    if XBar.rails3?
+    if XBar.rails3? || XBar.rails4?
       after_initialize :set_current_shard
     else
       def after_initialize
@@ -64,7 +64,7 @@ module XBar::Model
     def should_use_normal_connection?
       (defined?(Rails) && XBar.config &&
         !XBar.environments.include?(Rails.env.to_s)) || 
-        (if XBar.rails32?
+        (if XBar.rails32? || XBar.rails4?
            _establish_connection
          else
            self.read_inheritable_attribute(:_establish_connection)
@@ -96,7 +96,7 @@ module XBar::Model
     def clean_table_name
       return unless connection_proxy.should_clean_table_name?
       if self != ActiveRecord::Base && self.respond_to?(:reset_table_name) &&
-        (if XBar.rails32?
+        (if XBar.rails32? || XBar.rails4?
            !self._reset_table_name
          else
            !self.read_inheritable_attribute(:_reset_table_name)
@@ -105,7 +105,7 @@ module XBar::Model
         self.reset_table_name
       end
 
-      if XBar.rails3?
+      if XBar.rails3? || XBar.rails4?
         self.reset_column_information
         self.instance_variable_set(:@quoted_table_name, nil)
       end
@@ -126,7 +126,7 @@ module XBar::Model
     end
 
     def unreplicated_model
-      if XBar.rails32?
+      if XBar.rails32? || XBar.rails4?
         self._unreplicated = true
       else
         write_inheritable_attribute(:_unreplicated, true)
@@ -134,7 +134,7 @@ module XBar::Model
     end
     
     def unreplicated_model?
-      if XBar.rails32?
+      if XBar.rails32? || XBar.rails4?
          _unreplicated
        else
          read_inheritable_attribute(:_unreplicated)
@@ -142,7 +142,7 @@ module XBar::Model
     end
         
     def xbar_establish_connection(spec = nil)
-      if XBar.rails32?
+      if XBar.rails32? || XBar.rails4?
         self._establish_connection = true
       else
         write_inheritable_attribute(:_establish_connection, true)
@@ -151,7 +151,7 @@ module XBar::Model
     end
 
     def xbar_unestablish_connection
-      if XBar.rails32?
+      if XBar.rails32? || XBar.rails4?
         self._establish_connection = false
       else
         write_inheritable_attribute(:_establish_connection, false)
@@ -159,7 +159,7 @@ module XBar::Model
     end
 
     def xbar_set_table_name(value = nil)
-      if XBar.rails32?
+      if XBar.rails32? || XBar.rails4?
         self._reset_table_name = true
         self.table_name = value
       else

@@ -2,6 +2,6 @@
 
 source "http://rubygems.org"
 
-gem "rails", "3.2.1"
+gem "rails", :path=>"/opt/rails/rails-3.2"
 
 gemspec :path=>"../"
