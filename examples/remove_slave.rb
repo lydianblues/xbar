@@ -17,10 +17,8 @@ class User < ActiveRecord::Base; end
 #     instances 2 and 3 are slaves.
 # (3) The standard databases and tables have been created on
 #     instance 1 and automatically replicated to instances 2 and 3.
-# (4) Instance 4 is runnning and may or may not be a slave.
 #
-puts %x{ curl -s deimos:9393/remove_slave --header "Accept: text/plain" \
-  -d remove_slave[slave]=4}
+
 XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
 
 empty_users_table(:canada)
@@ -38,12 +36,13 @@ puts("done")
 
 count = query_users_table(:canada)
 puts "After pause : entered #{count} records in master replica of Canada shard"
-puts %x{ curl -s deimos:9393/add_slave --header "Accept: text/plain" \
-  -d add_slave[master]=1 -d add_slave[slaves]=4 -d add_slave[sync]=sync }
+
+puts %x{ curl -s deimos:9393/remove_slave --header "Accept: text/plain" \
+  -d remove_slave[slave]=3 }
 puts %x{ curl -s deimos:9393/status --header "Accept: text/plain" }
 
 print "Switching to new XBar environment..."
-XBar::Mapper.reset(xbar_env: 'canada3', app_env: 'test')
+XBar::Mapper.reset(xbar_env: 'canada4', app_env: 'test')
 puts "done."
 
 print "Resuming paused threads..."
@@ -64,6 +63,8 @@ puts query_users_table(:canada)
 puts User.using(:canada).all.size
 puts User.using(:canada_east).all.size
 puts User.using(:canada_central).all.size
-puts User.using(:canada_west).all.size
-puts User.using(:canada_north).all.size
 
+# Add slave instance three back so that this test will be reentrant.
+puts %x{ curl -s deimos:9393/add_slave --header "Accept: text/plain" \
+-d add_slave[master]=1 -d add_slave[slaves]=3 -d add_slave[sync]=sync }
+puts %x{ curl -s deimos:9393/status --header "Accept: text/plain" }

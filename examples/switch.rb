@@ -32,8 +32,8 @@ XBar::Mapper.reset(xbar_env: 'canada2', app_env: 'test')
 do_work(5, 10, :canada)
 
 join_workers
-User.using(:canada_central).all.size
 cleanup_exited_threads
+User.using(:canada_central).all.size
 
 puts %x{ ssh _mysql@deimos repctl status}
 

@@ -5,7 +5,7 @@
 # reason that we're not simply using SIGKILL is that eventually we may want to
 # do more work in the signal handler.
 
-Signal.trap("SIGUSR1") { puts "Exit via SIGUSR1!"; STDOUT.flush; exit(0) }
+Signal.trap("SIGUSR1") { puts "Exit via SIGUSR1 (expected)"; STDOUT.flush; exit(0) }
 
 require 'active_record'
 require 'xbar'
