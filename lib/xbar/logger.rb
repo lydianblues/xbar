@@ -5,7 +5,7 @@ class XBar::Logger < Logger
     str = super
 
     if proxy = Thread.current[:connection_proxy]
-      str += "Shard: #{proxy.current_shard} -"
+      str += "Shard: #{proxy.current_shard.to_s.colorize(:green)} -"
     end
 
     str

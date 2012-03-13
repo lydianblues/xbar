@@ -15,9 +15,9 @@ wait_for_gate
 # the replica set master, then resume us.
 do_work(5, 100, :canada)
 
-print "Waiting for all workers to complete..."
+puts "Server: Waiting for all workers to complete..."
 join_workers
-puts "done"
+puts "Server: done"
 
 cleanup_exited_threads
 

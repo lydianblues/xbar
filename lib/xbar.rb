@@ -20,8 +20,14 @@ module XBar
 
   class << self
     attr_accessor :debug
+    attr_reader :logger
   end
-  
+
+  require 'xbar/logger'
+  @logger ||= Logger.new('/tmp/xbar-logger', shift_age = 7,
+    shift_size = 1048576)
+  @logger.level = Logger::WARN # DEBUG, INFO, WARN, ERROR, FATAL
+
   # There is no corresponding 'setter' method because this is not
   # how the Rails environment is set.
   def self.rails_env
@@ -101,22 +107,17 @@ module XBar
     end
   end
 
-  def self.logger
-    @logger ||= Logger.new('/tmp/xbar-logger', shift_age = 7,
-      shift_size = 1048576)
-  end
-
   def self.start_server
     @server_mutex.synchronize do
-      puts "XBar server already running" if @server_running
+      XBar.logger.warn("XBar server already running") if @server_running
       unless @server_running
         Thread.new do
           @server_running = true
           at_exit do 
-            puts "XBar server exiting."
+            XBar.logger.info("XBar server exiting.")
             @server_mutex.synchronize { @server_running = false }
           end
-          puts "XBar server starting."
+          XBar.logger.info("XBar server starting.")
           XBar::Server.start
         end
       end
@@ -126,7 +127,7 @@ module XBar
   def self.stop_server
     @server_mutex.synchronize do
       if @server_running
-        puts "XBar server stopping."
+        XBar.logger.info("XBar server stopping.")
         XBar::Server.shutdown
         @server_running = false
       end
@@ -159,8 +160,9 @@ end
 require "xbar/shard"
 require "xbar/proxy"
 require "xbar/scope_proxy"
-require "xbar/logger"
 require "xbar/server"
+require "xbar/color"
+require "xbar/statistics"
 
 ActiveRecord::Base.send(:include, XBar::Model)
 class XBarModel < ActiveRecord::Base; end; # used only in migrations

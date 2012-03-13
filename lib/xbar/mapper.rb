@@ -79,15 +79,11 @@ module XBar
         file_name = config_file_name
        
         if File.exists? file_name
-          if XBar.debug
-            puts "XBar::Mapper, reading configuration from file #{file_name}"
-          end
+          XBar.logger.info("XBar::Mapper, reading configuration from file #{file_name}")
           config = JSON.parse(ERB.new(File.read(file_name)).result)
         else
-          if XBar.debug
-            puts("XBar::Mapper: No config file #{file_name} -- " +
-                 "Deriving defaults.")
-          end
+          XBar.logger.warn("XBar::Mapper: No config file #{file_name} -- " +
+            "Deriving defaults.")
           config = {}
         end
         HashWithIndifferentAccess.new(config)
@@ -132,9 +128,9 @@ module XBar
         self.xbar_env = new_xbar_env
         self.app_env = options[:app_env] if options[:app_env]
             
-        if XBar.debug
-          puts "XBar::Mapper#reset, xbar_env=#{xbar_env}, app_env=#{app_env}"
-        end
+        XBar.logger.info("XBar::Mapper#reset, xbar_env=#{xbar_env}, " +
+          "app_env=#{app_env}")
+
         initialize_shards(config)
         initialize_options(config)
         

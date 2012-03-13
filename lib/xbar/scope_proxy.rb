@@ -4,7 +4,8 @@ class XBar::ScopeProxy
   def initialize(shard, klass, opts = {})
     @shard = shard
     @klass = klass
-    puts "XBar::ScopeProxy#initialize for klass=#{klass}" if XBar.debug
+    XBar.logger.debug("ScopeProxy#initialize".colorize(:blue) + 
+      " for klass=#{klass}")
     @slave_read_allowed = opts[:slave_read_allowed]
   end
 
@@ -41,11 +42,10 @@ class XBar::ScopeProxy
 #    if use_adapter
     @klass.connection.current_model = @klass
     @klass.connection.slave_read_allowed = @slave_read_allowed
-    if XBar.debug
-      puts "ScopeProxy#method_missing, method=#{method.to_s}, " +
-        "shard=#{@shard}, klass=#{@klass.name}, " +
-        "slave_read_allowed=#{!!@slave_read_allowed}"
-    end
+    XBar.logger.debug("ScopeProxy#method_missing".colorize(:blue) + ", " +
+      "method=#{method.to_s.colorize(:red)}, " +
+      "shard=#{@shard.to_s.colorize(:green)}, klass=#{@klass.name}, " +
+      "slave_read_allowed=#{!!@slave_read_allowed}")
     @klass.connection.run_queries_on_shard(@shard, true) do
       @klass = @klass.send(method, *args, &block)
     end

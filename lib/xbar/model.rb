@@ -116,7 +116,8 @@ module XBar::Model
         return self
       end
       clean_table_name
-      puts "XBar::Model#using" if XBar.debug
+      XBar.logger.debug("Model#using".colorize(:blue) + ": " +
+        "Creating new scope proxy")
       return XBar::ScopeProxy.new(shard_name, self, opts)
     end
 

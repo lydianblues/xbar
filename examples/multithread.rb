@@ -15,9 +15,18 @@ threads = []
 
 class User < ActiveRecord::Base; end
 
+# Clean up the environment a little.
+%x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
+client = mysql_client_for(:canada, 1)
+client.query("DELETE FROM users")
+client = mysql_client_for(:canada, 2)
+client.query("DELETE FROM users")
 client = mysql_client_for(:canada, 0)
 client.query("DELETE FROM users")
 
+# Client connections will be closed when this thread exits.
+
+XBar.enable_stats
 5.times do |i|
   threads << Thread.new(i) do
     XBar.using(:canada) do
@@ -32,6 +41,8 @@ end
 
 threads.each(&:join)
 
+XBar.disable_stats
+
 # The threads have exited.  Clean up their state in the
 # ActiveRecord connection pool layer.
 XBar::Mapper.disconnect_all!
@@ -40,11 +51,11 @@ XBar::Mapper.disconnect_all!
 # specified.
 results = client.query("SELECT COUNT(*) AS count FROM users")
 results.each do |row|
-  puts row["count"]
+  puts row["count"] # 50
 end
 
-puts User.using_any(:canada).all.size
-puts User.using_any(:canada).all.size
-puts User.using(:canada_east).all.size
-puts User.using(:canada_central).all.size
-puts User.using(:canada_west).all.size
+puts User.using_any(:canada).all.size # 500
+puts User.using_any(:canada).all.size # 500
+puts User.using(:canada_east).all.size # 50
+puts User.using(:canada_central).all.size # 500
+puts User.using(:canada_west).all.size # 500

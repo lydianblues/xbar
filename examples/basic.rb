@@ -17,6 +17,8 @@ include XBar::ServerHelpers
 # required.
 #
 
+XBar.enable_stats
+
 # This must agree with what's in the 'simple' JSON config file.  Make sure that
 # we're starting with a clean slate.
 %x{ rm -f /tmp/store.sqlite3 /tmp/bakery.sqlite3 /tmp/deli.sqlite3 \
@@ -87,3 +89,4 @@ d1 = User.using(:deli).all.size # 3
 
 puts [s1, s2, s3, s4, p1, b1, d1].to_s # [2, 3, 2, 3, 1, 2, 3]
 
+puts XBar::Statistics.dump_stats

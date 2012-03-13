@@ -62,8 +62,9 @@ response = reset("localhost", 7250, xbar_env: 'canada2',
   app_env: 'test', file: file)
 puts "done."
 
-print "Resuming paused threads..."
+print "Client: Resuming paused threads..."
 runstate("localhost", 7250, :cmd => :resume)
-puts "done"
+puts "Client: done"
 
 puts %x{ ssh _mysql@deimos repctl status}
+

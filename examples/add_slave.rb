@@ -3,6 +3,7 @@ require_relative "lib/server_helpers"
 include XBar::ServerHelpers
 
 # More setup, before we start up threads.
+XBar.enable_stats
 XBar.directory = File.expand_path(File.dirname(__FILE__))
 
 puts "Using XBar config files from #{XBar.directory}/config"
@@ -67,3 +68,4 @@ puts User.using(:canada_central).all.size
 puts User.using(:canada_west).all.size
 puts User.using(:canada_north).all.size
 
+# XBar::Statistics.dump_stats

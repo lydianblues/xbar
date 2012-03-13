@@ -1,15 +1,11 @@
 require "set"
 
-# For debugging.
-require File.expand_path(File.join(File.dirname(__FILE__),  'colors'))
-
 class UsageStatistics < ActiveRecord::Base
 end
 
 class XBar::Proxy
   
   include XBar::Mapper
-  include Colors
 
   # No setter method.    
   attr_reader :last_current_shard
@@ -22,9 +18,8 @@ class XBar::Proxy
   attr_accessor :slave_read_allowed
  
   def initialize
-    if XBar.debug
-      puts "Proxy##{ BLUE_TEXT}{initialize}#{RESET_COLORS}: Initializing new proxy."
-    end
+    XBar.logger.info "Proxy#initialize".colorize(:blue) + 
+      ": Initializing new proxy."
     @reset = false
     @pause = false
     register
@@ -39,10 +34,7 @@ class XBar::Proxy
 
   # Called from migration.
   def clean_proxy
-    if XBar.debug
-      puts "Proxy##{BLUE_TEXT}clean_proxy:#{RESET_COLORS}: " +
-        "current shard = #{@current_shard}"
-    end
+    XBar.logger.debug("Proxy#clean_proxy".colorize(:blue))
     @current_shard = :master
     clear_block_scope
   end
@@ -56,10 +48,9 @@ class XBar::Proxy
         raise "Nonexistent Shard Name: #{s}"
       end
     end
-    if XBar.debug
-      puts "Proxy##{BLUE_TEXT}current_shard=#{RESET_COLORS}: " +
-        "previous_shard = #{@current_shard}, new_shard = #{shard_name}"
-    end
+    XBar.logger.debug("Proxy#current_shard".colorize(:blue) + ": " +
+      "previous_shard = #{@current_shard.to_s.colorize(:green)}, " +
+      "new_shard = #{shard_name.to_s.colorize(:green)}")
     @current_shard = shard_name
   end
 
@@ -104,17 +95,14 @@ class XBar::Proxy
     older_shard = current_shard 
     enter_block_scope if use_scope
     self.current_shard = shard_name
-    if XBar.debug
-      puts "Proxy##{BLUE_TEXT}run_queries_on_shard#{RESET_COLORS}: " +
-        "current shard = #{current_shard}, use_scope = #{use_scope}, " +
-        "previous shard = #{older_shard}"
-    end
+    XBar.logger.debug("Proxy#run_queries_on_shard".colorize(:blue) + ": " +
+      "current shard = #{current_shard.to_s.colorize(:green)}, " +
+      "use_scope = #{use_scope.to_s.colorize(:cyan)}, " +
+      "previous shard = #{older_shard.to_s.colorize(:green)}")
     result = yield
   ensure
-    if XBar.debug
-      puts "Proxy##{BLUE_TEXT}run_queries_on_shard#{RESET_COLORS}: " +
-        "restoring previous shard = #{older_shard}"
-    end
+    XBar.logger.debug("Proxy#run_queries_on_shard".colorize(:blue) + ": " +
+        "restoring previous shard = #{older_shard.to_s.colorize(:green)}")
     leave_block_scope if use_scope
     self.current_shard = older_shard
   end
@@ -154,12 +142,12 @@ class XBar::Proxy
   end
   
   def method_missing(method, *args, &block)
-    if XBar.debug
-      puts("\nProxy##{BLUE_TEXT}method_missing#{RESET_COLORS}: " + 
-        "method = #{RED_TEXT}#{method}#{RESET_COLORS}, " +
-        "current_shard=#{current_shard}, " +
-        "in_block_scope=#{in_block_scope?}")
-    end
+
+    XBar.logger.debug("Proxy#method_missing".colorize(:blue) + ": " + 
+      "method = #{method.to_s.colorize(:red)}, " +
+      "current_shard=#{current_shard.to_s.colorize(:green)}, " +
+      "in_block_scope=#{in_block_scope?.to_s.colorize(:cyan)}")
+
     if method.to_s =~ /insert|select|execute/ && !in_block_scope? # should clean connection
       shard = @last_current_shard = current_shard
       clean_proxy
@@ -179,46 +167,6 @@ class XBar::Proxy
     cp = select_shard.master
     cp.automatic_reconnect = true if XBar.rails31?
     cp
-  end
-
-  def enter_statistics(shard_name, config, method)
-   
-    return unless XBar.collect_stats?
-   
-    saved_current_model = current_model
-    if UsageStatistics.connection.kind_of?(XBar::Proxy)
-      connection_pool = UsageStatistics.connection.shards[:master][0]
-      connection_pool.automatic_reconnect = true
-      connection = connection_pool.connection
-     
-      return unless connection.table_exists? :usage_statistics
-
-      # We have an AbstractAdapter.  We must insert statistics using this
-      # adapter, not the Proxy, because otherwise the insertion triggers
-      # 'enter_statistics' again and we would be in an infinite loop.
-
-=begin
-      params = {
-        shard_name: shard_name,
-        method: method.to_s,
-        adapter: config[:adapter],
-        username: config[:username],
-        thread_id: Thread.current.object_id.to_s,
-        port: (config[:port] || "default"),
-        host: config[:host],
-        database_name: config[:database]}
-      insert(connection, params) -- alternatively
-=end
-     
-      sql = "INSERT INTO usage_statistics " +
-        "(shard_name, method, adapter, username, thread_id, port, host, database_name) " +
-        "VALUES (\'#{shard_name}\', \'#{method.to_s}\', \'#{config[:adapter]}\', " +
-        "\'#{config[:username]}\', \'#{Thread.current.object_id.to_s}\', " +
-        "#{config[:port] || "default"}, \'#{config[:host]}\', \'#{config[:database]}\')"
-      connection.execute(sql)
-
-      self.current_model = saved_current_model
-    end
   end
 
   def request_pause
@@ -301,26 +249,19 @@ class XBar::Proxy
     if current_shard.kind_of? Array
       shard = current_shard.first
       if current_shard.size != 1
-        puts "WARNING: selecting only first shard from array"
+        XBar.logger.warn("XBar::Proxy#select_shard".colorize(:blue) + ": " +
+        "Selecting only first shard from array".colorize(:red))
       end
     else
       shard = current_shard
     end
     unless @shard_list[shard] 
-       puts "Shard not found: current_shard = #{shard}, @shard_list = #{@shard_list.keys}"     
+       XBar.logger.error("XBar::Proxy#select_shard".colorize(:blue) + ": " +
+         "Shard not found".colorize(:red) + ": " +
+         "current_shard = #{shard.colorize(:green)}, " + 
+         "@shard_list = #{@shard_list.keys}")
     end
     @shard_list[shard]
-  end
-
-  def insert_some_sql(conn, data)
-    binds   = data.map { |name, value|
-      [conn.columns('usage_statistics').find { |x| x.name == name.to_s }, value]
-    }
-    columns = binds.map(&:first).map(&:name)
-    puts "binds = #{binds.to_yaml}"
-    sql = "INSERT INTO usage_statistics (#{columns.join(", ")})
-      VALUES (#{(['?'] * columns.length).join(', ')})"
-    conn.exec_insert(sql, 'SQL', binds)
   end
   
 end

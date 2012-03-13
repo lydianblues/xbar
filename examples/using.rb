@@ -1,5 +1,11 @@
-ENV['RAILS_ENV'] = 'test'
-require 'rails'
+# require 'rails'
+# ENV['RAILS_ENV'] = 'test'
+module Rails
+  def self.env 
+    'test'
+  end
+end
+
 require 'active_record'
 require 'xbar'
 require_relative 'lib/server_helpers'

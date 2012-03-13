@@ -26,47 +26,6 @@ namespace :db do
   desc 'Prepare the test databases'
   task :prepare => ["db:drop", "db:create", "db:tables"]
 
-  desc 'Create usage_statistics table'
-  task :add_stats do
-    require 'active_record'
-    require "xbar"
-    XBar.directory = File.expand_path("../spec", __FILE__)
-    XBar::Mapper.reset(xbar_env: 'default', app_env: 'test')
-    
-    class CreateUsageStatistics < ActiveRecord::Migration
-      using :master
-      def up
-        create_table(:usage_statistics) do |t|
-          t.string :shard_name
-          t.string :method
-          t.string :adapter
-          t.string :username
-          t.string :thread_id
-          t.integer :port
-          t.string :host
-          t.string :database_name
-        end
-      end
-    end 
-    CreateUsageStatistics.migrate(:up)
-  end
-
-  desc 'Drop usage_statistics table'
-  task :drop_stats do
-    require 'active_record'
-    require "xbar"
-    XBar.directory = File.expand_path("../spec", __FILE__)
-    XBar::Mapper.reset(xbar_env: 'default', app_env: 'test')
-    
-    class CreateUsageStatistics < ActiveRecord::Migration
-      using :master
-      def down
-        drop_table(:usage_statistics)
-      end
-    end    
-    CreateUsageStatistics.migrate(:down)
-  end
-
   desc 'Drop the databases for tests'
   task :drop do
     mysql_user = ENV['MYSQL_USER'] || "root"
@@ -220,8 +179,6 @@ namespace :db do
     end
   end
 
-  desc 'Prepare the test databases'
-  task :prepare => [:drop, :create, :tables]
 end
 
 
