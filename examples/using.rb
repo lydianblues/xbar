@@ -9,7 +9,6 @@ end
 require 'active_record'
 require 'xbar'
 require_relative 'lib/server_helpers'
-
 include XBar::ServerHelpers
 
 XBar.directory = File.expand_path(File.dirname(__FILE__))

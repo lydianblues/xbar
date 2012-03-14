@@ -1,4 +1,9 @@
 require_relative "lib/server_helpers"
+require 'repctl/client'
+
+REPCTL_SERVER = 'deimos.thirdmode.com'
+XBAR_HOST = 'localhost'
+XBAR_PORT = 7250
 
 include XBar::ServerHelpers
 
@@ -20,13 +25,13 @@ class User < ActiveRecord::Base; end
 #     instance 1 and automatically replicated to instances 2 and 3.
 # (4) Instance 4 is runnning and may or may not be a slave.
 #
-puts %x{ curl -s deimos:9393/remove_slave --header "Accept: text/plain" \
-  -d remove_slave[slave]=4}
+puts remove_slave(REPCTL_SERVER, 4)
+
 XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
 
 empty_users_table(:canada)
 
-puts %x{ curl -s deimos:9393/status --header "Accept: text/plain" }
+puts get_status(REPCTL_SERVER)
 
 do_work(5, 100, :canada)
 
@@ -39,9 +44,8 @@ puts("done")
 
 count = query_users_table(:canada)
 puts "After pause : entered #{count} records in master replica of Canada shard"
-puts %x{ curl -s deimos:9393/add_slave --header "Accept: text/plain" \
-  -d add_slave[master]=1 -d add_slave[slaves]=4 -d add_slave[sync]=sync }
-puts %x{ curl -s deimos:9393/status --header "Accept: text/plain" }
+puts add_slave(REPCTL_SERVER, 1, 4, sync: true)
+puts get_status(REPCTL_SERVER)
 
 print "Switching to new XBar environment..."
 XBar::Mapper.reset(xbar_env: 'canada3', app_env: 'test')
@@ -59,7 +63,7 @@ cleanup_exited_threads
 
 count = query_users_table(:canada)
 
-puts %x{ curl -s deimos:9393/status --header "Accept: text/plain" }
+puts get_status(REPCTL_SERVER)
 
 puts query_users_table(:canada)
 puts User.using(:canada).all.size

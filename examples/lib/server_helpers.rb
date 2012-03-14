@@ -4,6 +4,8 @@ require 'xbar'
 
 module XBar
   module ServerHelpers
+    
+    class User < ActiveRecord::Base; end
 
     def do_work(num_threads, iterations, shard)
       @threads = []

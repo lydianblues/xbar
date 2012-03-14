@@ -3,6 +3,12 @@ require 'active_record'
 require 'xbar'
 require_relative 'lib/server_helpers'
 
+require 'repctl/client'
+
+REPCTL_SERVER = 'deimos.thirdmode.com'
+XBAR_HOST = 'localhost'
+XBAR_PORT = 7250
+
 include XBar::ServerHelpers
 
 # While I/O is going on, pause threads and switch the MySQL master.
@@ -14,11 +20,11 @@ puts "Using XBar config files from #{XBar.directory}/config"
 
 XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
 class User < ActiveRecord::Base; end
-%x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
+puts switch_master(REPCTL_SERVER, 1, [2, 3])
 
 empty_users_table(:canada)
 
-puts %x{ ssh _mysql@deimos repctl status}
+puts get_status(REPCTL_SERVER)
 
 do_work(5, 100, :canada)
 
@@ -32,15 +38,12 @@ puts("done")
 count = query_users_table(:canada)
 puts "After pause : entered #{count} records in master replica of Canada shard"
 
-print "Switching master..."
-puts %x{ ssh _mysql@deimos repctl switch_master 2 1 3 }
-print "done:"
-puts %x{ ssh _mysql@deimos repctl status }
+puts switch_master(REPCTL_SERVER, 2, [1, 3])
+puts get_status(REPCTL_SERVER)
 
 print "Switching to new XBar environment..."
 XBar::Mapper.reset(xbar_env: 'canada2', app_env: 'test')
 puts "done."
-
 
 print "Resuming paused threads..."
 XBar::Mapper.unpause
@@ -52,16 +55,17 @@ puts "done"
 
 cleanup_exited_threads
 
-count = query_users_table(:canada)
-puts %x{ ssh _mysql@deimos repctl status}
+puts get_status(REPCTL_SERVER)
 
 puts query_users_table(:canada)
-puts User.using(:canada).all.size
-puts User.using(:canada_east).all.size
-puts User.using(:canada_central).all.size
-puts User.using(:canada_west).all.size
+puts "Summary of user records in each shard (should all be 500):"
+puts "\tUsers found in canada shard: #{User.using(:canada).all.size}"
+puts "\tUsers found in canada_east shard: #{User.using(:canada_east).all.size}"
+puts "\tUsers found in canada_central shard: #{User.using(:canada_central).all.size}"
+puts "\tUsers found in canada_west shard: #{User.using(:canada_west).all.size}"
+
 
 # Switch master back to server 1 for the benefit of 
 # other tests.
-puts %x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
-puts %x{ ssh _mysql@deimos repctl status }
+puts switch_master(REPCTL_SERVER, 1, [2, 3])
+puts get_status(REPCTL_SERVER)

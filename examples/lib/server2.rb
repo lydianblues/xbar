@@ -3,8 +3,6 @@ require 'xbar'
 require_relative 'server_helpers'
 require_relative 'common_helpers'
 
-class User < ActiveRecord::Base; end
-
 include XBar::ServerHelpers
 include XBar::CommonHelpers
 
@@ -23,7 +21,11 @@ cleanup_exited_threads
 
 # At the end, there should be 500 records in each replica set member,
 # just as if the change master had not happened.
-puts User.using(:canada).all.size
-puts User.using(:canada_east).all.size
-puts User.using(:canada_central).all.size
-puts User.using(:canada_west).all.size
+class User < ActiveRecord::Base; end
+
+puts "Summary of user records in each shard (should all be 500):"
+puts "\tUsers found in canada shard: #{User.using(:canada).all.size}"
+puts "\tUsers found in canada_east shard: #{User.using(:canada_east).all.size}"
+puts "\tUsers found in canada_central shard: #{User.using(:canada_central).all.size}"
+puts "\tUsers found in canada_west shard: #{User.using(:canada_west).all.size}"
+

@@ -2,6 +2,13 @@ require 'active_support'
 require 'active_record'
 require 'xbar'
 require_relative 'lib/server_helpers'
+require 'repctl/client'
+
+REPCTL_SERVER = 'deimos.thirdmode.com'
+XBAR_HOST = 'localhost'
+XBAR_PORT = 7250
+
+
 include XBar::ServerHelpers
 
 # This file demonstrates five different threads simultaneously
@@ -16,7 +23,7 @@ threads = []
 class User < ActiveRecord::Base; end
 
 # Clean up the environment a little.
-%x{ ssh _mysql@deimos repctl switch_master 1 2 3 }
+puts switch_master(REPCTL_SERVER, 1, [2, 3])
 client = mysql_client_for(:canada, 1)
 client.query("DELETE FROM users")
 client = mysql_client_for(:canada, 2)
