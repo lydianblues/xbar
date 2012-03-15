@@ -1,4 +1,37 @@
-# XBar  - MongoDB Style Sharding for ActiveRecord
+# @markup markdown
+
+# XBar  - Dynamically Reconfigurable Sharding for ActiveRecord
+
+XBar is a Ruby Gem that integrates into the `ActiveRecord` to provide a
+dynamically reconfigurable data storage environment.  This environment
+consists of a number of *shards*.  Each shard is a *replica set* consisting of
+a *master* database server and zero or more *slave* database servers.
+
+The selection of a shard is under control of the application.  However, the
+application will typically not need to be aware of the master and slaves
+within a replica set.  XBar will send writes to the master replica, and read
+queries can be directed to slaves via the `using_any` function.
+
+XBar is designed for an application that uses sharding and/or replication and
+that runs in a cloud environment.  In a cloud, servers can come and go. Here
+are some typical scenarios that demonstrate the fluidity of clouds.
+
+* Adding or removing a replication slave as application load varies
+* Reindex a huge table on the slave, promote the slave to master and demote
+  the former master to slave
+* Switch to a new master at possibly a different IP address if the old master
+  fails
+  
+In all these cases, XBar can be reconfigured *on the fly*.  In Rails terms,
+think of swapping in a new `database.yml` file while the application is
+running. No special application support is needed for this.  XBar will pause
+the I/O threads that are checked out from the `ActiveRecord` connection pools
+as soon as these threads don't have an open transaction.  Then it will install
+the equivalent of a new `database.yml` file and finally release the threads.
+
+XBar is a *managed* object.  It incorporates a HTTPS server that can be used
+to query XBar status or to reconfigure XBar via a JSON document sent over
+HTTP.  
 
 ## Supported versions
 *Caution* -- only ActiveRecord 3.2.2 and ActiveRecord 4.0.0.beta (commit
@@ -9,48 +42,47 @@ will soon be improved.
 
 The XBar project is derived from *Octopus*.  Octopus showed that the
 implementation technique of using a proxy for the
-`ActiveRecord::ConnectionAdapters::AbstractAdapter` object instances
-is possible.  This proxy implements a sort of *late binding*,
-returning a real abstract adapter object that depends on the current
-state of the proxy, especially on the value of the `current_shard`.
-Many of the tricky pieces of code, especially those for managing
-associations, come from Octopus.
+`ActiveRecord::ConnectionAdapters::AbstractAdapter` object instances is
+possible.  This proxy implements a sort of *late binding*, choosing a real
+abstract adapter object that depends on the current state of the proxy,
+especially on the value of the `current_shard`, and whether the current method
+call may be a write or be part of a transaction, and then forwarding the
+method call to a real abstract adapter instance.
 
-## Changes from Octopus
+Many of the tricky pieces of code, especially those for supporting
+associations, come from Octopus.  However, Octopus does not support shards and
+replica sets at the same time, and it is not dynamically reconfigurable.
 
-The Octopus implementation has been modified to support efficient
-dynamic reconfiguration.  The configuration is given in a JSON
-document, rather than YAML.  This makes it convenient to update the
-application over the network using the standard JSON over HTTP
-technique.  The JSON document supports multiple application
-environments. These align with Rails environments when Rails is
-present. Unlike Octopus, this document format does not allow multiple
-'Octopus' evironments.  Instead, there is an `xbar_env` which
-essentially specifies a *different* JSON file to use.
+The Octopus implementation has been modified to support efficient dynamic
+reconfiguration.  The configuration is given in a JSON document, rather than
+YAML.  This makes it convenient to update the application over the network
+using the standard JSON over HTTP technique.  The JSON document supports
+multiple application environments. These align with Rails environments when
+Rails is present. Unlike Octopus, this document format does not allow multiple
+'Octopus' evironments.  Instead, there is an `xbar_env` which essentially
+specifies a *different* JSON file to use.
 
-Another change is that shards that are themselves a collection of
-mirrors is supported.  Mirroring does not take place among shards, it
-takes place among the mirrors that constitute a shard.  Replication
-among the mirrors is expected to be handling by some database specific
-technique, such as native *MySQL* replication.
+Another change is that shards that are themselves a collection of mirrors is
+supported.  Mirroring does not take place among shards, it takes place among
+the mirrors that constitute a shard.  Replication among the mirrors is
+expected to be handling by some database specific technique, such as native
+*MySQL* replication.
 
-The Octopus `Proxy` class has been split into two classes `Proxy` and
-`Shard`, and into a module `Mapper`.  `Mapper` contains the in-memory
-representation of the current configuration.  Each `Proxy` instance no
-longer has its own copy of the configuration.  There is exactly one
-`Mapper` module for the entire application, necessarily true, since
-its a *module*.  As before there is one `Proxy` instance per thread,
-which allows per-thread state to be stored in the instance.  A `Proxy`
-instance references a collection of `Shard` instances.  Each `Shard`
-instance manages a set of replicas for that shard.
+The Octopus `Proxy` class has been split into two classes `Proxy` and `Shard`,
+and into a module `Mapper`.  `Mapper` contains the in-memory representation of
+the current configuration.  Each `Proxy` instance no longer has its own copy
+of the configuration.  There is exactly one `Mapper` module for the entire
+application, necessarily true, since its a *module*.  As before there is one
+`Proxy` instance per thread, which allows per-thread state to be stored in the
+instance.  A `Proxy` instance references a collection of `Shard` instances.
+Each `Shard` instance manages a set of replicas for that shard.
 
-The concept of a *group* as used in Octopus is mostly gone.  Vestiges
-of it exist in the migration code.  Thus a migration can still specify
-that it should take place on multiple shards.  In the general case, a
-group concept would fork writes to send them to multiple shards.  This 
-is only practical if the writes are performed in parallel in separate
-threads.  The current `Proxy` would become a group manager and we'd
-have a hierarchy something like this:
+The concept of a *group* as used in Octopus is mostly gone.  Vestiges of it
+exist in the migration code.  Thus a migration can still specify that it
+should take place on multiple shards.  In the general case, a group concept
+would fork writes to send them to multiple shards.  This is only practical if
+the writes are performed in parallel in separate threads.  The current `Proxy`
+would become a group manager and we'd have a hierarchy something like this:
 
     Proxy (set of Groups) -> Group (set of Shards) -> Shard (set of replicas)
 	
@@ -58,12 +90,11 @@ This complexity is too great for the first version of `XBar`.
 
 ## Dynamic Reconfiguration
 
-The sharding configuration may be changed while an application is
-running and actively executing transactions.  The `pause_switch.rb`
-file in the *examples* subdirectory illustrates this for the case when
-a master replica within a shard is changed.  To run this example, you
-also need the *repctl* gem, which is used to manage MySQL replicating
-clusters.  
+The sharding configuration may be changed while an application is running and
+actively executing transactions.  The `pause_switch.rb` file in the *examples*
+subdirectory illustrates this for the case when a master replica within a
+shard is changed.  To run this example, you also need the *repctl* gem, which
+is used to manage MySQL replicating clusters.
 
 ## Concepts
 

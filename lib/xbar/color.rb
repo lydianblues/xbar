@@ -55,7 +55,6 @@ module XBar
   end
 end
 
-String.class_eval do # :nodoc: all
-  include XBar::Color
-end 
+String.class_eval { include XBar::Color } 
+
 
