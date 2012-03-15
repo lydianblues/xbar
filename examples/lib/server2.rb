@@ -1,10 +1,10 @@
 require 'active_record'
 require 'xbar'
-require_relative '../helpers/server_helpers'
-require_relative '../helpers/common_helpers'
+require_relative '../helpers/server'
+require_relative '../helpers/common'
 
-include XBar::Helpers::Server
-include XBar::Helpers::Common
+include XBar::Examples::Helpers::Server
+include XBar::Examples::Helpers::Common
 
 # Wait for the client to set up our state via the client API calls.
 wait_for_gate
