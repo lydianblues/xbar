@@ -1,0 +1,7 @@
+--title "XBar Documentation"
+--exclude examples/lib
+--exclude examples/migrations
+--output-dir doc/yard
+lib/**/*.rb
+examples/**/*.rb -
+README.mkdn
