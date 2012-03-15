@@ -1,10 +1,10 @@
 require 'active_record'
 require 'xbar'
-require_relative 'server_helpers'
-require_relative 'common_helpers'
+require_relative '../helpers/server_helpers'
+require_relative '../helpers/common_helpers'
 
-include XBar::ServerHelpers
-include XBar::CommonHelpers
+include XBar::Helpers::Server
+include XBar::Helpers::Common
 
 # Wait for the client to set up our state via the client API calls.
 wait_for_gate
@@ -21,7 +21,8 @@ cleanup_exited_threads
 
 # At the end, there should be 500 records in each replica set member,
 # just as if the change master had not happened.
-class User < ActiveRecord::Base; end
+class User < ActiveRecord::Base # :nodoc:
+end
 
 puts "Summary of user records in each shard (should all be 500):"
 puts "\tUsers found in canada shard: #{User.using(:canada).all.size}"

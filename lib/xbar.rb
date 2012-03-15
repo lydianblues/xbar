@@ -165,6 +165,9 @@ require "xbar/color"
 require "xbar/statistics"
 
 ActiveRecord::Base.send(:include, XBar::Model)
-class XBarModel < ActiveRecord::Base; end; # used only in migrations
+
+# Used only in migrations
+class XBarModel < ActiveRecord::Base # :nodoc:
+end
 
 XBar.start_server

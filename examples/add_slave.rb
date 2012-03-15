@@ -1,75 +1,88 @@
-require_relative "lib/server_helpers"
+require_relative 'helpers/server'
 require 'repctl/client'
 
-REPCTL_SERVER = 'deimos.thirdmode.com'
-XBAR_HOST = 'localhost'
-XBAR_PORT = 7250
+module XBar
+  module Examples
+    # Test preconditions:
+    #
+    # * Repctl webserver is running at deimos:9393
+    # * The replication status is instance 1 is master, and
+    #   instances 2 and 3 are slaves.
+    # * The standard databases and tables have been created on
+    #   instance 1 and automatically replicated to instances 2 and 3.
+    # * Instance 4 is runnning and may or may not be a slave.
+    #
+    module AddSlave
 
-include XBar::ServerHelpers
+      REPCTL_SERVER = 'deimos.thirdmode.com'
+      XBAR_HOST = 'localhost'
+      XBAR_PORT = 7250
 
-# More setup, before we start up threads.
-XBar.enable_stats
-XBar.directory = File.expand_path(File.dirname(__FILE__))
+      extend Repctl::Client
+      extend XBar::Examples::Helpers::Server
 
-puts "Using XBar config files from #{XBar.directory}/config"
+      puts self.respond_to? :empty_users_table
+      puts self.class
+      puts self.ancestors
 
-XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
-class User < ActiveRecord::Base; end
+      # More setup, before we start up threads.
+      XBar.enable_stats
+      XBar.directory = File.expand_path(File.dirname(__FILE__))
 
-# Test preconditions:
-#
-# (1) Repctl webserver is running at deimos:9393
-# (2) The replication status is instance 1 is master, and
-#     instances 2 and 3 are slaves.
-# (3) The standard databases and tables have been created on
-#     instance 1 and automatically replicated to instances 2 and 3.
-# (4) Instance 4 is runnning and may or may not be a slave.
-#
-puts remove_slave(REPCTL_SERVER, 4)
+      puts "Using XBar config files from #{XBar.directory}/config"
 
-XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
+      XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
+      class User < ActiveRecord::Base # :nodoc:
+      end
 
-empty_users_table(:canada)
+      puts remove_slave(REPCTL_SERVER, 4)
 
-puts get_status(REPCTL_SERVER)
+      XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
 
-do_work(5, 100, :canada)
+      empty_users_table(:canada)
 
-sleep 1
-puts "Requesting all proxies to pause"
-XBar::Mapper.request_pause
-print "Requests complete, waiting for pause..."
-XBar::Mapper.wait_for_pause
-puts("done")
+      puts repl_status(REPCTL_SERVER)
 
-count = query_users_table(:canada)
-puts "After pause : entered #{count} records in master replica of Canada shard"
-puts add_slave(REPCTL_SERVER, 1, 4, sync: true)
-puts get_status(REPCTL_SERVER)
+      do_work(5, 100, :canada)
 
-print "Switching to new XBar environment..."
-XBar::Mapper.reset(xbar_env: 'canada3', app_env: 'test')
-puts "done."
+      sleep 1
+      puts "Requesting all proxies to pause"
+      XBar::Mapper.request_pause
+      print "Requests complete, waiting for pause..."
+      XBar::Mapper.wait_for_pause
+      puts("done")
 
-print "Resuming paused threads..."
-XBar::Mapper.unpause
-puts "done."
+      count = query_users_table(:canada)
+      puts "After pause : entered #{count} records in master replica of Canada shard"
+      puts add_slave(REPCTL_SERVER, 1, 4, sync: true)
+      puts repl_status(REPCTL_SERVER)
 
-print "Waiting for all workers to complete..."
-join_workers
-puts "done"
+      print "Switching to new XBar environment..."
+      XBar::Mapper.reset(xbar_env: 'canada3', app_env: 'test')
+      puts "done."
 
-cleanup_exited_threads
+      print "Resuming paused threads..."
+      XBar::Mapper.unpause
+      puts "done."
 
-count = query_users_table(:canada)
+      print "Waiting for all workers to complete..."
+      join_workers
+      puts "done"
 
-puts get_status(REPCTL_SERVER)
+      cleanup_exited_threads
 
-puts query_users_table(:canada)
-puts User.using(:canada).all.size
-puts User.using(:canada_east).all.size
-puts User.using(:canada_central).all.size
-puts User.using(:canada_west).all.size
-puts User.using(:canada_north).all.size
+      count = query_users_table(:canada)
 
-# XBar::Statistics.dump_stats
+      puts repl_status(REPCTL_SERVER)
+
+      puts query_users_table(:canada)
+      puts User.using(:canada).all.size
+      puts User.using(:canada_east).all.size
+      puts User.using(:canada_central).all.size
+      puts User.using(:canada_west).all.size
+      puts User.using(:canada_north).all.size
+
+      # XBar::Statistics.dump_stats
+    end
+  end
+end

@@ -1,80 +1,85 @@
 require 'active_support'
 require 'active_record'
 require 'xbar'
-require_relative "lib/server_helpers"
+require_relative "helpers/server"
 
-require 'repctl/client'
+module XBar
+  module Examples
+      #
+      # This is a server-mode test, meaning that it runs in the same Ruby VM as
+      # <tt>XBar</tt> and <tt>ActiveRecord</tt>.  It does not use the XBar client
+      # API since it can call functions in XBar directly.  It does use the Repctl
+      # client API, however.
+      #
+      # The <tt>XBar::Mapper</tt> module has three functions related to pausing
+      # threads: <tt>request_pause</tt>, <tt>wait_for_pause</tt>, and
+      # <tt>unpause</tt>.  These functions are exercised in this example.
+      #
+      # We start up 5 threads, each to enter 100 records in a table in a shard.
+      # Sleep for 1 second to let the threads do a little work, then invoke
+      # <tt>request_pause</tt>. Next, invoke <tt>wait_for_pause</tt> to wait for the
+      # threads to pause themselves.  Then we check the count of records in the
+      # table twice, one second apart to make sure that all the threads are paused,
+      # that is, no new records are being added. Finally, we call <tt>unpause</tt>
+      # to restart the threads, and verify that there are 500 records in the table.
+      #
+      # The point of this example is to show that active threads can be paused and
+      # resumed without bad effects.
+      #
+      module Pause
 
-REPCTL_SERVER = 'deimos.thirdmode.com'
-XBAR_HOST = 'localhost'
-XBAR_PORT = 7250
+      extend XBar::Examples::Helpers::Server
 
-# Demonstrate the use of pause/unpause/wait_for_pause while five
-# threads are simultaneosly doing I/O.
+      # More setup, before we start up threads.
+      XBar.directory = File.expand_path(File.dirname(__FILE__))
+      XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
+      class User < ActiveRecord::Base # :nodoc:
+      end
 
-include XBar::ServerHelpers
+      empty_users_table(:canada)
 
-# More setup, before we start up threads.
-XBar.directory = File.expand_path(File.dirname(__FILE__))
-XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
-class User < ActiveRecord::Base; end
+      print "Starting 5 threads, each to enter 100 records in canada shard..."
+      do_work(5, 100, :canada)
+      puts("done")
 
-empty_users_table(:canada)
+      puts "Sleeping for one second"
+      sleep 1
+      puts "Requesting all proxies to pause"
+      XBar::Mapper.request_pause
+      print "Requests complete, waiting for pause..."
+      XBar::Mapper.wait_for_pause
+      puts("done")
 
-puts get_status(REPCTL_SERVER)
+      puts "NOTE: Transactions can be committed, but they might not show up immediately "
+      puts "NOTE: in a query from a different database connection.  Thus these values"
+      puts "NOTE: may be slightly different."
+      count = query_users_table(:canada)
+      puts "Before unpause 1: found #{count} records in master replica of canada shard"
+      sleep 1
+      count = query_users_table(:canada)
+      puts "Before unpause 2: found #{count} records in master replica of canada shard"
+      count = query_users_table(:canada)
+      puts "Before unpause 3: found #{count} records in master replica of canada shard"
 
-do_work(5, 100, :canada)
+      print "Unpausing all threads..."
+      XBar::Mapper.unpause
+      puts("done")
 
-sleep 1
-puts "Requesting all proxies to pause"
-XBar::Mapper.request_pause
-print "Requests complete, waiting for pause..."
-XBar::Mapper.wait_for_pause
-puts("done")
+      print "Waiting for join..."
+      join_workers
+      puts("done")
 
-count = query_users_table(:canada)
-puts "Before pause 1: entered #{count} records in master replica of Canada shard"
-sleep 1
-count = query_users_table(:canada)
-puts "Before pause 2: entered #{count} records in master replica of Canada shard"
+      cleanup_exited_threads
+      count = query_users_table(:canada)
 
-XBar::Mapper.unpause
+      puts "Summary of records canada shard (should all be 500):"
+      puts "\tUsers found by direct SQL to master replica: #{count}"
+      puts "\tUsers found in canada shard: #{User.using(:canada).all.size}"
+      puts "\tUsers found in canada_east shard: #{User.using(:canada_east).all.size}"
+      puts "\tUsers found in canada_central shard: #{User.using(:canada_central).all.size}"
+      puts "\tUsers found in canada_west shard: #{User.using(:canada_west).all.size}"
 
-join_workers
-
-cleanup_exited_threads
-
-count = query_users_table(:canada)
-puts "After join: #{count} records in master replica of Canada shard"
-
-puts "Done"
-# exit 0
-
-puts get_status(REPCTL_SERVER)
-
-puts switch_master(REPCTL_SERVER, 2, [1, 3])
-puts get_status(REPCTL_SERVER)
-
-XBar::Mapper.reset(xbar_env: 'canada2', app_env: 'test')
-
-do_work(5, 10, :canada)
-
-join_workers
-cleanup_exited_threads
-
-User.using(:canada_central).all.size
-
-puts get_status(REPCTL_SERVER)
-
-puts query_users_table(:canada)
-puts User.using(:canada).all.size
-puts User.using(:canada_east).all.size
-puts User.using(:canada_central).all.size
-puts User.using(:canada_west).all.size
-
-# Switch master back to server 1 for the benefit of 
-# other tests.
-puts switch_master(REPCTL_SERVER, 1, [2, 3])
-puts get_status(REPCTL_SERVER)
-
-
+      puts "Done"
+    end
+  end
+end

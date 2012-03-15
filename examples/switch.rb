@@ -1,56 +1,64 @@
 require 'active_support'
 require 'active_record'
 require 'xbar'
-require_relative "lib/server_helpers"
-
 require 'repctl/client'
+require_relative 'helpers/server'
 
-REPCTL_SERVER = 'deimos.thirdmode.com'
-XBAR_HOST = 'localhost'
-XBAR_PORT = 7250
+module XBar
+  module Examples
+    #
+    # Start some threads, let them do a lot of I/O, wait for them
+    # to finish.  The switch master and repeat.  No pause/unpause
+    # is involved.
+    #
+    module Switch
 
-# Start some threads, let them do a lot of I/O, wait for them
-# to finish.  The switch master and repeat.  No pause/unpause
-# is involved.
+      REPCTL_SERVER = 'deimos.thirdmode.com'
+      XBAR_HOST = 'localhost'
+      XBAR_PORT = 7250
 
-include XBar::ServerHelpers
+      extend Repctl::Client
+      extend XBar::Examples::Helpers::Server
 
-# More setup, before we start up threads.
-XBar.directory = File.expand_path(File.dirname(__FILE__))
-XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
-class User < ActiveRecord::Base; end
-puts switch_master(REPCTL_SERVER, 1, [2, 3])
-empty_users_table(:canada)
+      # More setup, before we start up threads.
+      XBar.directory = File.expand_path(File.dirname(__FILE__))
+      XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')
+      class User < ActiveRecord::Base # :nodoc:
+      end
+      puts switch_master(REPCTL_SERVER, 1, [2, 3])
+      empty_users_table(:canada)
 
-puts get_status(REPCTL_SERVER)
+      puts repl_status(REPCTL_SERVER)
 
-do_work(5, 10, :canada)
-join_workers
-cleanup_exited_threads
+      do_work(5, 10, :canada)
+      join_workers
+      cleanup_exited_threads
 
-puts get_status(REPCTL_SERVER)
+      puts repl_status(REPCTL_SERVER)
 
-puts switch_master(REPCTL_SERVER, 2, [1, 3])
-puts get_status(REPCTL_SERVER)
+      puts switch_master(REPCTL_SERVER, 2, [1, 3])
+      puts repl_status(REPCTL_SERVER)
 
-XBar::Mapper.reset(xbar_env: 'canada2', app_env: 'test')
+      XBar::Mapper.reset(xbar_env: 'canada2', app_env: 'test')
 
-do_work(5, 10, :canada)
+      do_work(5, 10, :canada)
 
-join_workers
-cleanup_exited_threads
-User.using(:canada_central).all.size
+      join_workers
+      cleanup_exited_threads
+      User.using(:canada_central).all.size
 
-puts get_status(REPCTL_SERVER)
+      puts repl_status(REPCTL_SERVER)
 
-puts query_users_table(:canada)
-puts User.using(:canada).all.size
-puts User.using(:canada_east).all.size
-puts User.using(:canada_central).all.size
-puts User.using(:canada_west).all.size
+      puts query_users_table(:canada)
+      puts User.using(:canada).all.size
+      puts User.using(:canada_east).all.size
+      puts User.using(:canada_central).all.size
+      puts User.using(:canada_west).all.size
 
-# Switch master back to server 1 for the benefit of 
-# other tests.
-puts switch_master(REPCTL_SERVER, 1, [2, 3])
-puts get_status(REPCTL_SERVER)
-
+      # Switch master back to server 1 for the benefit of 
+      # other tests.
+      puts switch_master(REPCTL_SERVER, 1, [2, 3])
+      puts repl_status(REPCTL_SERVER)
+    end
+  end
+end

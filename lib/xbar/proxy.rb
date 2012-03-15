@@ -1,8 +1,5 @@
 require "set"
 
-class UsageStatistics < ActiveRecord::Base
-end
-
 class XBar::Proxy
   
   include XBar::Mapper

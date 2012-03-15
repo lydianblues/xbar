@@ -18,7 +18,9 @@ module XBar
        
     def self.dump_stats
       init_stats unless @db
-      @db.execute( "SELECT * FROM usage" ) do |row|
+      query =
+        'SELECT method, shard, count(*) FROM usage GROUP BY method, shard;'
+      @db.execute(query) do |row|
         print_row(row)
       end
     end
@@ -63,16 +65,10 @@ module XBar
     end
 
     def self.print_row(row)
-      str = ""
-      str += "method: #{row[1].colorize(:blue)}" if row[1]
-      str += ", shard: #{row[0].colorize(:green)}" if row[0]
-      str += ", database: #{row[7].colorize(:magenta)}" if row[7]
-      str += ", adapter: #{row[2].colorize(:cyan)}" if row[2]
-      str += ", port: #{row[5]}" if row[5]
-      str += ", host: #{row[6]}" if row[6]
-#      str += ", user: #{row[3]}" if row[3]
-#      str += ", thread: #{row[4]}" if row[4]
-      puts str
+      s = row[0].colorize(:red)
+      s += " " + row[1].colorize(:cyan)
+      s += " " + row[2].to_s.colorize(:blue)
+      puts s
     end
 
   end

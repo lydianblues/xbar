@@ -3,5 +3,6 @@
 source "http://rubygems.org"
 
 gem "rails", :path=>"/opt/rails/rails-3.2"
+gem "sdoc", :git=>"git://github.com/fxn/sdoc.git"
 
 gemspec :path=>"../"

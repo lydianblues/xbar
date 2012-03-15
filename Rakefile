@@ -2,7 +2,8 @@ require 'bundler/gem_tasks'
 require 'rspec/core/rake_task'
 # require 'metric_fu'
 require 'appraisal'
-
+require 'rdoc/task'
+require 'sdoc'
 task :default => :spec
 
 # MetricFu::Mapperuration.run do |config|
@@ -19,6 +20,24 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
 end
 
 RSpec::Core::RakeTask.new(:rcov) do |spec|
+end
+
+desc "Generate documentation for the XBar gem"
+RDoc::Task.new do |rdoc|
+  RDOC_MAIN = 'README.rdoc'
+  rdoc.rdoc_dir = 'doc/rdoc'
+  rdoc.title    = "XBar Documentation"
+
+  rdoc.options << '-f' << 'sdoc'
+  rdoc.options << '-T' << 'rails'
+  rdoc.options << '-e' << 'UTF-8'
+  rdoc.options << '-g' # SDoc flag, link methods to GitHub
+  rdoc.options << '-m' << RDOC_MAIN
+  rdoc.rdoc_files.include(RDOC_MAIN)
+  rdoc.rdoc_files.include('lib/**/*.rb')
+  rdoc.rdoc_files.include('examples/**/*.rb')
+  rdoc.rdoc_files.exclude('examples/lib/*.rb')
+  rdoc.rdoc_files.exclude('examples/migrations/*.rb')
 end
 
 namespace :db do

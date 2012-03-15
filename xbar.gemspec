@@ -31,5 +31,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'syntax'
   s.add_development_dependency 'ruby-debug19'
   s.add_development_dependency 'repctl'
+  s.add_development_dependency 'rdoc'
+  s.add_development_dependency 'sdoc'
 #  s.add_development_dependency 'metric_fu'
 end
