@@ -28,7 +28,7 @@ module XBar
       #
       module Pause
 
-      extend XBar::Examples::Helpers::Server
+      extend Helpers::Server
 
       # More setup, before we start up threads.
       XBar.directory = File.expand_path(File.dirname(__FILE__))

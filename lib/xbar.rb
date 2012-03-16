@@ -28,6 +28,14 @@ module XBar
     shift_size = 1048576)
   @logger.level = Logger::WARN # DEBUG, INFO, WARN, ERROR, FATAL
 
+  def self.start_debug
+    @logger.level = Logger::DEBUG
+  end
+
+  def self.stop_debug
+    @logger.level = Logger::WARN
+  end
+
   # There is no corresponding 'setter' method because this is not
   # how the Rails environment is set.
   def self.rails_env

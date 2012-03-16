@@ -11,8 +11,8 @@ module XBar
 
       extend XBar::Client
       extend Repctl::Client
-      extend XBar::Examples::Helpers::Client
-      extend XBar::Examples::Helpers::Common
+      extend Helpers::Client
+      extend Helpers::Common
 
       REPCTL_SERVER = 'deimos.thirdmode.com'
       XBAR_HOST = 'localhost'

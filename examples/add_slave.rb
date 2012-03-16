@@ -19,11 +19,7 @@ module XBar
       XBAR_PORT = 7250
 
       extend Repctl::Client
-      extend XBar::Examples::Helpers::Server
-
-      puts self.respond_to? :empty_users_table
-      puts self.class
-      puts self.ancestors
+      extend Helpers::Server
 
       # More setup, before we start up threads.
       XBar.enable_stats

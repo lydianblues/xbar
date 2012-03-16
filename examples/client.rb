@@ -13,7 +13,7 @@ module XBar
     #
     module Client
 
-      extend XBar::Examples::Helpers::Client
+      extend Helpers::Client
       extend XBar::Client
 
       # Start the server and wait until it responds to HTTP requests.

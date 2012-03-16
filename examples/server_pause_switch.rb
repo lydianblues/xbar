@@ -14,7 +14,7 @@ module XBar
       XBAR_PORT = 7250
 
       extend Repctl::Client
-      extend XBar::Examples::Helpers::Server
+      extend Helpers::Server
 
       # While I/O is going on, pause threads and switch the MySQL master.
 

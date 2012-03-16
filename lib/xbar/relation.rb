@@ -14,6 +14,9 @@
 module ActiveRecord
   class Relation
     def using(shard_name, opts = {})
+      msg = "ActiveRecord::Relation#using".colorize(:blue) + 
+        " called for shard=#{shard_name.to_s.colorize(:green)}"
+      XBar.logger.debug(msg)
       if defined?(::Rails) && !XBar.environments.include?(Rails.env.to_s)
         return self
       end
@@ -22,6 +25,9 @@ module ActiveRecord
     end
 
     def using_any(shard_name = nil)
+      msg = "ActiveRecord::Relation#using_any".colorize(:blue) + 
+        " called for shard=#{shard_name.to_s.colorize(:green)}"
+      XBar.logger.debug(msg)
       shard_name ||= self.connection.current_shard
       using(shard_name, slave_read_allowed: true)
     end

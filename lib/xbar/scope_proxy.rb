@@ -4,12 +4,16 @@ class XBar::ScopeProxy
   def initialize(shard, klass, opts = {})
     @shard = shard
     @klass = klass
-    XBar.logger.debug("ScopeProxy#initialize".colorize(:blue) + 
-      " for klass=#{klass}")
+    msg = "ScopeProxy#initialize".colorize(:blue) + 
+      " for klass=#{klass} and shard=#{shard.to_s.colorize(:green)}"
+    XBar.logger.debug(msg)
     @slave_read_allowed = opts[:slave_read_allowed]
   end
 
   def using(shard, opts = {})
+    msg = "ScopeProxy#using".colorize(:blue) + 
+      " shard=#{shard.to_s.colorize(:green)}"
+    XBar.logger.debug(msg)
     unless @klass.connection.shards[shard]
       raise "Nonexistent Shard Name: #{shard}"
     end 
@@ -18,6 +22,9 @@ class XBar::ScopeProxy
   end
 
   def using_any(shard = nil)
+    msg = "ScopeProxy#using_any".colorize(:blue) +
+      ", shard=#{shard.to_s.colorize(:green)}"
+    XBar.logger.debug(msg)
     shard ||= @klass.connection.current_shard
     using(shard, slave_read_allowed: true)
   end
@@ -42,10 +49,11 @@ class XBar::ScopeProxy
 #    if use_adapter
     @klass.connection.current_model = @klass
     @klass.connection.slave_read_allowed = @slave_read_allowed
-    XBar.logger.debug("ScopeProxy#method_missing".colorize(:blue) + ", " +
+    msg = "ScopeProxy#method_missing".colorize(:blue) + ", " +
       "method=#{method.to_s.colorize(:red)}, " +
       "shard=#{@shard.to_s.colorize(:green)}, klass=#{@klass.name}, " +
-      "slave_read_allowed=#{!!@slave_read_allowed}")
+      "slave_read_allowed=#{!!@slave_read_allowed}"
+    XBar.logger.debug(msg)
     @klass.connection.run_queries_on_shard(@shard, true) do
       @klass = @klass.send(method, *args, &block)
     end

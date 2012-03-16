@@ -45,7 +45,7 @@ class XBar::Proxy
         raise "Nonexistent Shard Name: #{s}"
       end
     end
-    XBar.logger.debug("Proxy#current_shard".colorize(:blue) + ": " +
+    XBar.logger.debug("Proxy#current_shard=".colorize(:blue) + ": " +
       "previous_shard = #{@current_shard.to_s.colorize(:green)}, " +
       "new_shard = #{shard_name.to_s.colorize(:green)}")
     @current_shard = shard_name

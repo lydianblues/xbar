@@ -18,7 +18,7 @@ module XBar
       XBAR_PORT = 7250
 
       extend Repctl::Client
-      extend XBar::Examples::Helpers::Server
+      extend Helpers::Server
 
       XBar.directory = File.expand_path(File.dirname(__FILE__))
       XBar::Mapper.reset(xbar_env: 'canada', app_env: 'test')

@@ -24,7 +24,7 @@ module XBar
     #
     module Basic
 
-      extend XBar::Examples::Helpers::Server
+      extend Helpers::Server
 
       XBar.enable_stats
 

@@ -254,7 +254,7 @@ controller, to a specific shard, use this syntax:
     end
 ```
 
-## Exception with Idle Connections
+### Exception with Idle Connections
 
 Sometimes, when a connection isn't used for much time,
 this will makes ActiveRecord raising an exception. if you have this
@@ -267,7 +267,7 @@ configuration:
 
 This will tell XBar to verify the connection before sending the query.
 
-## Mixing XBar with the Rails Multiple Database Mechanism
+### Mixing XBar with the Rails Multiple Database Mechanism
 
 If you want to set a custom connection to a specific model, use this
 syntax:
